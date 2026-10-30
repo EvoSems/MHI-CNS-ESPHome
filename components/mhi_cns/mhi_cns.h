@@ -41,6 +41,9 @@ class MhiCnsComponent : public Component {
   void set_valid_frames_sensor(sensor::Sensor *sensor) { this->valid_frames_sensor_ = sensor; }
   void set_success_rate_sensor(sensor::Sensor *sensor) { this->success_rate_sensor_ = sensor; }
   void set_last_valid_frame_age_sensor(sensor::Sensor *sensor) { this->last_valid_frame_age_sensor_ = sensor; }
+  void set_clock_timeouts_sensor(sensor::Sensor *sensor) { this->clock_timeouts_sensor_ = sensor; }
+  void set_signature_errors_sensor(sensor::Sensor *sensor) { this->signature_errors_sensor_ = sensor; }
+  void set_checksum_errors_sensor(sensor::Sensor *sensor) { this->checksum_errors_sensor_ = sensor; }
 
  protected:
   struct PersistedSettings {
@@ -78,6 +81,9 @@ class MhiCnsComponent : public Component {
   uint32_t save_at_{0};
   uint32_t valid_frames_{0};
   uint32_t frame_errors_{0};
+  uint32_t clock_timeouts_{0};
+  uint32_t signature_errors_{0};
+  uint32_t checksum_errors_{0};
   uint32_t last_valid_frame_at_{0};
   uint32_t diagnostics_at_{0};
 
@@ -85,6 +91,9 @@ class MhiCnsComponent : public Component {
   sensor::Sensor *valid_frames_sensor_{nullptr};
   sensor::Sensor *success_rate_sensor_{nullptr};
   sensor::Sensor *last_valid_frame_age_sensor_{nullptr};
+  sensor::Sensor *clock_timeouts_sensor_{nullptr};
+  sensor::Sensor *signature_errors_sensor_{nullptr};
+  sensor::Sensor *checksum_errors_sensor_{nullptr};
 };
 
 }  // namespace esphome::mhi_cns

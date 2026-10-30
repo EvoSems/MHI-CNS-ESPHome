@@ -44,14 +44,21 @@ void MhiCnsComponent::loop() {
     return;
   if (result != TransportResult::OK) {
     this->frame_errors_++;
+    this->clock_timeouts_++;
     return;
   }
 
-  AcState decoded{};
-  if (!FrameCodec::decode_state(this->rx_.data(), this->frame_size_, decoded)) {
+  const auto frame_result = FrameCodec::validate(this->rx_.data(), this->frame_size_);
+  if (frame_result != FrameError::OK) {
     this->frame_errors_++;
+    if (frame_result == FrameError::INVALID_SIGNATURE)
+      this->signature_errors_++;
+    else if (frame_result == FrameError::INVALID_CHECKSUM)
+      this->checksum_errors_++;
     return;
   }
+  AcState decoded{};
+  FrameCodec::decode_state(this->rx_.data(), this->frame_size_, decoded);
 
   this->valid_frames_++;
   this->last_valid_frame_at_ = millis();
@@ -193,6 +200,12 @@ void MhiCnsComponent::publish_diagnostics_if_due_() {
   if (this->last_valid_frame_age_sensor_ != nullptr)
     this->last_valid_frame_age_sensor_->publish_state(
         this->last_valid_frame_at_ == 0 ? NAN : (millis() - this->last_valid_frame_at_) / 1000.0f);
+  if (this->clock_timeouts_sensor_ != nullptr)
+    this->clock_timeouts_sensor_->publish_state(this->clock_timeouts_);
+  if (this->signature_errors_sensor_ != nullptr)
+    this->signature_errors_sensor_->publish_state(this->signature_errors_);
+  if (this->checksum_errors_sensor_ != nullptr)
+    this->checksum_errors_sensor_->publish_state(this->checksum_errors_);
 }
 
 void MhiCnsComponent::notify_state_() {

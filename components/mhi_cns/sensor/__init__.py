@@ -15,6 +15,9 @@ CONF_FRAME_ERRORS = "frame_errors"
 CONF_VALID_FRAMES = "valid_frames"
 CONF_SUCCESS_RATE = "success_rate"
 CONF_LAST_VALID_FRAME_AGE = "last_valid_frame_age"
+CONF_CLOCK_TIMEOUTS = "clock_timeouts"
+CONF_SIGNATURE_ERRORS = "signature_errors"
+CONF_CHECKSUM_ERRORS = "checksum_errors"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -37,6 +40,18 @@ CONFIG_SCHEMA = cv.Schema(
             accuracy_decimals=1, state_class=STATE_CLASS_MEASUREMENT,
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
+        cv.Optional(CONF_CLOCK_TIMEOUTS): sensor.sensor_schema(
+            icon="mdi:timer-alert-outline", accuracy_decimals=0,
+            state_class=STATE_CLASS_TOTAL_INCREASING, entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_SIGNATURE_ERRORS): sensor.sensor_schema(
+            icon="mdi:file-alert-outline", accuracy_decimals=0,
+            state_class=STATE_CLASS_TOTAL_INCREASING, entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
+        cv.Optional(CONF_CHECKSUM_ERRORS): sensor.sensor_schema(
+            icon="mdi:shield-alert-outline", accuracy_decimals=0,
+            state_class=STATE_CLASS_TOTAL_INCREASING, entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        ),
     }
 )
 
@@ -48,6 +63,9 @@ async def to_code(config):
         (CONF_VALID_FRAMES, parent.set_valid_frames_sensor),
         (CONF_SUCCESS_RATE, parent.set_success_rate_sensor),
         (CONF_LAST_VALID_FRAME_AGE, parent.set_last_valid_frame_age_sensor),
+        (CONF_CLOCK_TIMEOUTS, parent.set_clock_timeouts_sensor),
+        (CONF_SIGNATURE_ERRORS, parent.set_signature_errors_sensor),
+        (CONF_CHECKSUM_ERRORS, parent.set_checksum_errors_sensor),
     ):
         if key in config:
             value = await sensor.new_sensor(config[key])

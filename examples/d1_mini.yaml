@@ -42,6 +42,16 @@ switch:
     mhi_cns_id: mhi_bus
     power:
       name: MHI Power
+    auto_3d:
+      name: 3D Auto
+
+select:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    vertical_vanes:
+      name: Vertical Vanes
+    horizontal_vanes:
+      name: Horizontal Vanes
 
 sensor:
   - platform: mhi_cns
@@ -54,3 +64,9 @@ sensor:
       name: Communication Success Rate
     last_valid_frame_age:
       name: Last Valid Frame Age
+    clock_timeouts:
+      name: Clock Timeouts
+    signature_errors:
+      name: Signature Errors
+    checksum_errors:
+      name: Checksum Errors
