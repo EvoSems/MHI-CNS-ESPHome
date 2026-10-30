@@ -52,6 +52,7 @@ class MhiCnsComponent : public Component {
   void set_checksum_errors_sensor(sensor::Sensor *sensor) { this->checksum_errors_sensor_ = sensor; }
   void set_command_failures_sensor(sensor::Sensor *sensor) { this->command_failures_sensor_ = sensor; }
 #define MHI_SENSOR_SETTER(name) void set_##name##_sensor(sensor::Sensor *s) { this->name##_sensor_ = s; }
+  MHI_SENSOR_SETTER(indoor_temperature)
   MHI_SENSOR_SETTER(outdoor_temperature)
   MHI_SENSOR_SETTER(return_air_temperature)
   MHI_SENSOR_SETTER(current)
@@ -148,6 +149,7 @@ class MhiCnsComponent : public Component {
   sensor::Sensor *checksum_errors_sensor_{nullptr};
   sensor::Sensor *command_failures_sensor_{nullptr};
 #define MHI_SENSOR_MEMBER(name) sensor::Sensor *name##_sensor_{nullptr};
+  MHI_SENSOR_MEMBER(indoor_temperature)
   MHI_SENSOR_MEMBER(outdoor_temperature)
   MHI_SENSOR_MEMBER(return_air_temperature)
   MHI_SENSOR_MEMBER(current)

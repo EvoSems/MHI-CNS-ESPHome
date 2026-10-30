@@ -351,6 +351,7 @@ void MhiCnsComponent::publish_operating_data_() {
   if (static_cast<int32_t>(millis() - this->operating_data_at_) < 0) return;
   this->operating_data_at_ = millis() + OPERATING_DATA_PUBLISH_MS;
 #define PUB(name, value) if (this->name##_sensor_ != nullptr && !std::isnan(value)) this->name##_sensor_->publish_state(value)
+  PUB(indoor_temperature, this->state_.room_temperature);
   PUB(outdoor_temperature, this->state_.outdoor_temperature);
   PUB(return_air_temperature, this->state_.return_air_temperature);
   PUB(current, this->state_.current_amps);

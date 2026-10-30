@@ -68,6 +68,7 @@ sensor:
       name: Checksum Errors
     command_failures:
       name: Command Failures
+    indoor_temperature: {name: Indoor Temperature}
     outdoor_temperature: {name: Outdoor Temperature}
     return_air_temperature: {name: Return Air Temperature}
     current: {name: Current}

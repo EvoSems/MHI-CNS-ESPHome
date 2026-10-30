@@ -30,6 +30,7 @@ CONF_SIGNATURE_ERRORS = "signature_errors"
 CONF_CHECKSUM_ERRORS = "checksum_errors"
 CONF_COMMAND_FAILURES = "command_failures"
 DATA_SENSORS = {
+    "indoor_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "outdoor_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "return_air_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "current": (UNIT_AMPERE, DEVICE_CLASS_CURRENT, 2),
