@@ -107,6 +107,12 @@ int main() {
   assert(std::fabs(operating_state.indoor_coil_header - 17.376f) < 0.01f);
   assert(std::fabs(operating_state.outdoor_temperature - 10.0f) < 0.01f);
 
+  auto placeholder = make_status(LONG_FRAME_SIZE);
+  placeholder[6] = 0xFF;
+  refresh_checksum(placeholder);
+  assert(FrameCodec::decode_state(placeholder.data(), LONG_FRAME_SIZE, operating_state));
+  assert(std::fabs(operating_state.room_temperature - 24.0f) < 0.01f);
+
   std::cout << "protocol tests passed\n";
   return 0;
 }

@@ -58,7 +58,10 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
   state.mode = static_cast<HvacMode>(frame[DB0] & 0x1C);
   state.fan = frame[DB1] & 0x07;
   state.target_temperature = (frame[DB2] & 0x7F) / 2.0f;
-  state.room_temperature = (static_cast<int>(frame[DB3]) - 61) / 4.0f;
+  // 0xFF is a protocol placeholder meaning "use the indoor sensor", not a
+  // measured 48.5 C. Preserve the latest real DB3 measurement on those frames.
+  if (frame[DB3] != 0xFF)
+    state.room_temperature = (static_cast<int>(frame[DB3]) - 61) / 4.0f;
   state.error_code = frame[DB4];
 
   const uint8_t vertical = (frame[DB0] & 0xC0) | ((frame[DB1] & 0xB0) >> 4);
