@@ -105,7 +105,10 @@ void MhiCnsComponent::loop() {
       this->checksum_errors_++;
     return;
   }
-  AcState decoded{};
+  // Operating-data replies contain only the requested value. Start with the
+  // accumulated state so a temperature/current reply does not erase all the
+  // measurements learned from earlier replies in the request cycle.
+  AcState decoded = this->state_;
   FrameCodec::decode_state(this->rx_.data(), this->frame_size_, decoded);
 
   this->valid_frames_++;

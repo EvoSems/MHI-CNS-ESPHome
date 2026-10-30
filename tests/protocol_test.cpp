@@ -30,6 +30,13 @@ static std::array<uint8_t, LONG_FRAME_SIZE> make_status(size_t size) {
   return frame;
 }
 
+static void refresh_checksum(std::array<uint8_t, LONG_FRAME_SIZE> &frame) {
+  const uint16_t short_sum = FrameCodec::checksum(frame.data(), 18);
+  frame[18] = short_sum >> 8;
+  frame[19] = short_sum;
+  frame[32] = FrameCodec::checksum(frame.data(), 32);
+}
+
 int main() {
   for (const size_t size : {SHORT_FRAME_SIZE, LONG_FRAME_SIZE}) {
     auto frame = make_status(size);
@@ -77,6 +84,28 @@ int main() {
   FrameCodec::build_response(tx, LONG_FRAME_SIZE, true, command);
   assert(tx[9] == 0x40);
   assert(tx[12] == 0x90);
+
+  // Operating-data replies arrive one value at a time. Decoding a later reply
+  // into the accumulated state must preserve values from earlier replies.
+  AcState operating_state{};
+  auto outdoor = make_status(LONG_FRAME_SIZE);
+  outdoor[9] = 0x40;
+  outdoor[12] = 0x80;
+  outdoor[13] = 0x10;
+  outdoor[14] = 134;  // 10.0 C
+  refresh_checksum(outdoor);
+  assert(FrameCodec::decode_state(outdoor.data(), LONG_FRAME_SIZE, operating_state));
+  assert(std::fabs(operating_state.outdoor_temperature - 10.0f) < 0.01f);
+
+  auto header = make_status(LONG_FRAME_SIZE);
+  header[9] = 0xC0;
+  header[12] = 0x87;
+  header[13] = 0x10;
+  header[14] = 88;  // 17.376 C
+  refresh_checksum(header);
+  assert(FrameCodec::decode_state(header.data(), LONG_FRAME_SIZE, operating_state));
+  assert(std::fabs(operating_state.indoor_coil_header - 17.376f) < 0.01f);
+  assert(std::fabs(operating_state.outdoor_temperature - 10.0f) < 0.01f);
 
   std::cout << "protocol tests passed\n";
   return 0;
