@@ -37,9 +37,9 @@ switch:
 button:
   - platform: mhi_cns
     mhi_cns_id: mhi_bus
-    self_clean:
-      name: Self Clean
-      duration: 120min
+    trace_capture:
+      name: Capture MHI Trace
+      duration: 15s
 
 select:
   - platform: mhi_cns

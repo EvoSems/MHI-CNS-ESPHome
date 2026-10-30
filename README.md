@@ -29,6 +29,7 @@ testing is still required before replacing an existing installation.
 - Four-way climate swing plus direct vertical and horizontal vane positions
 - Command acknowledgement and failure diagnostics
 - Original MHI operating-data channels without calculated power estimates
+- Bounded paired MISO/MOSI trace capture from a Home Assistant button
 - Versioned persistent settings with migration
 - Host protocol tests and automatic D1 Mini firmware compilation
 

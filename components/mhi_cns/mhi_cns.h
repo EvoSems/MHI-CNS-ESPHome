@@ -38,7 +38,7 @@ class MhiCnsComponent : public Component {
   void set_horizontal_vanes(uint8_t value);
   void set_auto_3d(bool value);
   void set_silent_operation(bool value);
-  void start_self_clean(uint32_t duration_ms);
+  void start_trace_capture(uint32_t duration_ms);
   void set_external_temperature_sensor(sensor::Sensor *sensor) { this->external_temperature_sensor_ = sensor; }
   void set_external_temperature_timeout(uint32_t value) { this->external_temperature_timeout_ms_ = value; }
 
@@ -133,6 +133,8 @@ class MhiCnsComponent : public Component {
   uint32_t operating_data_at_{0};
   uint8_t operating_data_index_{0};
   uint32_t command_failures_{0};
+  uint32_t trace_until_{0};
+  uint32_t trace_frame_number_{0};
   bool silent_ack_pending_{false};
   bool pending_silent_restore_{false};
   bool silent_ack_value_{false};

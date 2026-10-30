@@ -1,5 +1,6 @@
 #include "mhi_cns.h"
 
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 
 #include <cmath>
@@ -106,6 +107,20 @@ void MhiCnsComponent::loop() {
     else if (frame_result == FrameError::INVALID_CHECKSUM)
       this->checksum_errors_++;
     return;
+  }
+  if (this->trace_until_ != 0) {
+    if (static_cast<int32_t>(millis() - this->trace_until_) < 0) {
+      char miso[format_hex_pretty_size(LONG_FRAME_SIZE)];
+      char mosi[format_hex_pretty_size(LONG_FRAME_SIZE)];
+      format_hex_pretty_to(miso, this->tx_.data(), this->frame_size_, ' ');
+      format_hex_pretty_to(mosi, this->rx_.data(), this->frame_size_, ' ');
+      ESP_LOGI("mhi_cns.trace", "#%lu MISO %s | MOSI %s",
+               static_cast<unsigned long>(++this->trace_frame_number_), miso, mosi);
+    } else {
+      ESP_LOGI("mhi_cns.trace", "Trace capture complete (%lu valid frame pairs)",
+               static_cast<unsigned long>(this->trace_frame_number_));
+      this->trace_until_ = 0;
+    }
   }
   // Operating-data replies contain only the requested value. Start with the
   // accumulated state so a temperature/current reply does not erase all the
@@ -230,11 +245,11 @@ void MhiCnsComponent::set_silent_operation(bool value) {
   this->silent_ack_deadline_ = millis() + 45000;
 }
 
-void MhiCnsComponent::start_self_clean(uint32_t duration_ms) {
-  this->set_mode(HvacMode::FAN);
-  this->set_fan(1);
-  this->set_power(true);
-  this->set_timeout("self_clean", duration_ms, [this]() { this->set_power(false); });
+void MhiCnsComponent::start_trace_capture(uint32_t duration_ms) {
+  this->trace_frame_number_ = 0;
+  this->trace_until_ = millis() + duration_ms;
+  ESP_LOGI("mhi_cns.trace", "Starting paired MISO/MOSI trace for %.1f seconds",
+           duration_ms / 1000.0f);
 }
 
 void MhiCnsComponent::queue_persisted_settings_() {
