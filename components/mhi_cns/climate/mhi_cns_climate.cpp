@@ -15,6 +15,7 @@ climate::ClimateTraits MhiCnsClimate::traits() {
                                   climate::CLIMATE_FAN_MEDIUM, climate::CLIMATE_FAN_HIGH,
                                   climate::CLIMATE_FAN_AUTO});
   traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL});
+  traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
   traits.set_visual_min_temperature(18.0f);
   traits.set_visual_max_temperature(30.0f);
   traits.set_visual_target_temperature_step(0.5f);
