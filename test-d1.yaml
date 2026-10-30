@@ -68,6 +68,7 @@ sensor:
       name: Checksum Errors
     command_failures:
       name: Command Failures
+    error_code: {name: Error Code}
     indoor_temperature: {name: Indoor Temperature}
     outdoor_temperature: {name: Outdoor Temperature}
     return_air_temperature: {name: Return Air Temperature}
@@ -75,8 +76,11 @@ sensor:
     compressor_frequency: {name: Compressor Frequency}
     energy_this_run: {name: Energy This Run}
     indoor_coil_u_bend: {name: Indoor Coil U Bend}
+    indoor_coil_capillary: {name: Indoor Coil Capillary}
     indoor_coil_header: {name: Indoor Coil Header}
+    outdoor_heat_exchanger_temperature: {name: Outdoor Heat Exchanger Temperature}
     discharge_pipe_temperature: {name: Discharge Pipe Temperature}
+    discharge_superheat: {name: Discharge Superheat}
     expansion_valve: {name: Expansion Valve}
     indoor_fan_speed: {name: Indoor Fan Speed}
     outdoor_fan_speed: {name: Outdoor Fan Speed}

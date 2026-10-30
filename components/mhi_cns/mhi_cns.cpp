@@ -15,9 +15,11 @@ static constexpr uint8_t SETTINGS_VERSION = 2;
 
 struct OperatingDataRequest { uint8_t selector; uint8_t code; };
 static constexpr OperatingDataRequest OPERATING_DATA[] = {
-    {0xC0, 0x80}, {0x40, 0x80}, {0xC0, 0x81}, {0xC0, 0x87}, {0xC0, 0x1F},
+    {0xC0, 0x80}, {0x40, 0x80}, {0xC0, 0x81}, {0x40, 0x81}, {0xC0, 0x87}, {0x40, 0x82},
+    {0xC0, 0x1F},
     {0x40, 0x1F}, {0xC0, 0x1E}, {0x40, 0x1E}, {0x40, 0x11}, {0x40, 0x85},
-    {0x40, 0x90}, {0x40, 0x7C}, {0x40, 0x0C}, {0x40, 0x13}, {0xC0, 0x94}, {0xC0, 0xDD},
+    {0x40, 0x90}, {0x40, 0xB1}, {0x40, 0x7C}, {0x40, 0x0C}, {0x40, 0x13},
+    {0xC0, 0x94}, {0xC0, 0xDD},
 };
 
 enum SettingField : uint8_t {
@@ -134,8 +136,13 @@ void MhiCnsComponent::loop() {
     if (this->retries_remaining_ == 0)
       this->command_failures_++;
   }
-  if (this->retries_remaining_ == 0)
+  if (this->retries_remaining_ == 0) {
     this->command_ = {};
+    if (this->pending_silent_restore_) {
+      this->pending_silent_restore_ = false;
+      this->set_silent_operation(this->settings_.silent_operation != 0);
+    }
+  }
 }
 
 void MhiCnsComponent::dump_config() {
@@ -257,8 +264,9 @@ void MhiCnsComponent::queue_persisted_settings_() {
     this->command_.auto_3d = this->settings_.auto_3d;
   }
   if (valid & FIELD_SILENT) {
-    this->command_.set_silent = true;
-    this->command_.silent = this->settings_.silent_operation;
+    // Silent operation uses a dedicated CNS request frame. Send it only after
+    // the normal power/mode/fan/temperature/vane restoration is acknowledged.
+    this->pending_silent_restore_ = true;
   }
 }
 
@@ -351,6 +359,7 @@ void MhiCnsComponent::publish_operating_data_() {
   if (static_cast<int32_t>(millis() - this->operating_data_at_) < 0) return;
   this->operating_data_at_ = millis() + OPERATING_DATA_PUBLISH_MS;
 #define PUB(name, value) if (this->name##_sensor_ != nullptr && !std::isnan(value)) this->name##_sensor_->publish_state(value)
+  PUB(error_code, this->state_.error_code);
   if (this->indoor_temperature_sensor_) {
     const float indoor = !std::isnan(this->state_.room_temperature)
                              ? this->state_.room_temperature
@@ -363,8 +372,11 @@ void MhiCnsComponent::publish_operating_data_() {
   PUB(compressor_frequency, this->state_.compressor_frequency);
   PUB(energy_this_run, this->state_.energy_this_run);
   PUB(indoor_coil_u_bend, this->state_.indoor_coil_u_bend);
+  PUB(indoor_coil_capillary, this->state_.indoor_coil_capillary);
   PUB(indoor_coil_header, this->state_.indoor_coil_header);
+  PUB(outdoor_heat_exchanger_temperature, this->state_.outdoor_heat_exchanger_temperature);
   PUB(discharge_pipe_temperature, this->state_.discharge_pipe_temperature);
+  PUB(discharge_superheat, this->state_.discharge_superheat);
 #undef PUB
   if (this->expansion_valve_sensor_) this->expansion_valve_sensor_->publish_state(this->state_.expansion_valve);
   if (this->indoor_fan_speed_sensor_) this->indoor_fan_speed_sensor_->publish_state(this->state_.indoor_fan_speed);

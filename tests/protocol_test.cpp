@@ -107,6 +107,24 @@ int main() {
   assert(std::fabs(operating_state.indoor_coil_header - 17.376f) < 0.01f);
   assert(std::fabs(operating_state.outdoor_temperature - 10.0f) < 0.01f);
 
+  auto return_air = make_status(LONG_FRAME_SIZE);
+  return_air[9] = 0xC0;
+  return_air[12] = 0x80;
+  return_air[13] = 0x20;
+  return_air[14] = 156;  // 24.0 C
+  refresh_checksum(return_air);
+  assert(FrameCodec::decode_state(return_air.data(), LONG_FRAME_SIZE, operating_state));
+  assert(std::fabs(operating_state.return_air_temperature - 24.0f) < 0.01f);
+
+  auto capillary = make_status(LONG_FRAME_SIZE);
+  capillary[9] = 0x40;
+  capillary[12] = 0x81;
+  capillary[13] = 0x10;
+  capillary[14] = 200;  // 8.0 C
+  refresh_checksum(capillary);
+  assert(FrameCodec::decode_state(capillary.data(), LONG_FRAME_SIZE, operating_state));
+  assert(std::fabs(operating_state.indoor_coil_capillary - 8.0f) < 0.01f);
+
   auto placeholder = make_status(LONG_FRAME_SIZE);
   placeholder[6] = 0xFF;
   refresh_checksum(placeholder);

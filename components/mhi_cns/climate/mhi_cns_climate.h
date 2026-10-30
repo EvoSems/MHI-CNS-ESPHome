@@ -15,6 +15,10 @@ class MhiCnsClimate : public climate::Climate,
   void control(const climate::ClimateCall &call) override;
   climate::ClimateTraits traits() override;
   void on_mhi_state(const AcState &state) override;
+
+ protected:
+  uint8_t last_vertical_position_{1};
+  uint8_t last_horizontal_position_{1};
 };
 
 }  // namespace esphome::mhi_cns

@@ -44,8 +44,11 @@ struct AcState {
   float compressor_frequency{NAN};
   float energy_this_run{NAN};
   float indoor_coil_u_bend{NAN};
+  float indoor_coil_capillary{NAN};
   float indoor_coil_header{NAN};
+  float outdoor_heat_exchanger_temperature{NAN};
   float discharge_pipe_temperature{NAN};
+  float discharge_superheat{NAN};
   uint16_t expansion_valve{0};
   uint8_t indoor_fan_speed{0};
   uint8_t outdoor_fan_speed{0};

@@ -14,7 +14,8 @@ climate::ClimateTraits MhiCnsClimate::traits() {
   traits.set_supported_fan_modes({climate::CLIMATE_FAN_QUIET, climate::CLIMATE_FAN_LOW,
                                   climate::CLIMATE_FAN_MEDIUM, climate::CLIMATE_FAN_HIGH,
                                   climate::CLIMATE_FAN_AUTO});
-  traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_VERTICAL});
+  traits.set_supported_swing_modes({climate::CLIMATE_SWING_OFF, climate::CLIMATE_SWING_BOTH,
+                                    climate::CLIMATE_SWING_VERTICAL, climate::CLIMATE_SWING_HORIZONTAL});
   traits.add_feature_flags(climate::CLIMATE_SUPPORTS_CURRENT_TEMPERATURE);
   traits.set_visual_min_temperature(18.0f);
   traits.set_visual_max_temperature(30.0f);
@@ -36,8 +37,26 @@ void MhiCnsClimate::control(const climate::ClimateCall &call) {
     }
   }
 
-  if (call.get_swing_mode().has_value())
-    this->parent_->set_vertical_vanes(*call.get_swing_mode() == climate::CLIMATE_SWING_VERTICAL ? 5 : 1);
+  if (call.get_swing_mode().has_value()) {
+    switch (*call.get_swing_mode()) {
+      case climate::CLIMATE_SWING_BOTH:
+        this->parent_->set_vertical_vanes(5);
+        this->parent_->set_horizontal_vanes(8);
+        break;
+      case climate::CLIMATE_SWING_VERTICAL:
+        this->parent_->set_vertical_vanes(5);
+        this->parent_->set_horizontal_vanes(this->last_horizontal_position_);
+        break;
+      case climate::CLIMATE_SWING_HORIZONTAL:
+        this->parent_->set_vertical_vanes(this->last_vertical_position_);
+        this->parent_->set_horizontal_vanes(8);
+        break;
+      default:
+        this->parent_->set_vertical_vanes(this->last_vertical_position_);
+        this->parent_->set_horizontal_vanes(this->last_horizontal_position_);
+        break;
+    }
+  }
 
   if (call.get_mode().has_value()) {
     switch (*call.get_mode()) {
@@ -95,7 +114,16 @@ void MhiCnsClimate::on_mhi_state(const AcState &state) {
     case 6: this->fan_mode = climate::CLIMATE_FAN_HIGH; break;
     default: this->fan_mode = climate::CLIMATE_FAN_AUTO; break;
   }
-  this->swing_mode = state.vertical_vanes == 5 ? climate::CLIMATE_SWING_VERTICAL : climate::CLIMATE_SWING_OFF;
+  const bool vertical_swing = state.vertical_vanes == 5;
+  const bool horizontal_swing = state.horizontal_vanes == 8;
+  if (!vertical_swing && state.vertical_vanes >= 1 && state.vertical_vanes <= 4)
+    this->last_vertical_position_ = state.vertical_vanes;
+  if (!horizontal_swing && state.horizontal_vanes >= 1 && state.horizontal_vanes <= 7)
+    this->last_horizontal_position_ = state.horizontal_vanes;
+  this->swing_mode = vertical_swing && horizontal_swing ? climate::CLIMATE_SWING_BOTH
+                     : vertical_swing                    ? climate::CLIMATE_SWING_VERTICAL
+                     : horizontal_swing                  ? climate::CLIMATE_SWING_HORIZONTAL
+                                                         : climate::CLIMATE_SWING_OFF;
   this->publish_state();
 }
 

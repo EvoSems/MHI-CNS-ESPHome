@@ -52,6 +52,7 @@ class MhiCnsComponent : public Component {
   void set_checksum_errors_sensor(sensor::Sensor *sensor) { this->checksum_errors_sensor_ = sensor; }
   void set_command_failures_sensor(sensor::Sensor *sensor) { this->command_failures_sensor_ = sensor; }
 #define MHI_SENSOR_SETTER(name) void set_##name##_sensor(sensor::Sensor *s) { this->name##_sensor_ = s; }
+  MHI_SENSOR_SETTER(error_code)
   MHI_SENSOR_SETTER(indoor_temperature)
   MHI_SENSOR_SETTER(outdoor_temperature)
   MHI_SENSOR_SETTER(return_air_temperature)
@@ -59,8 +60,11 @@ class MhiCnsComponent : public Component {
   MHI_SENSOR_SETTER(compressor_frequency)
   MHI_SENSOR_SETTER(energy_this_run)
   MHI_SENSOR_SETTER(indoor_coil_u_bend)
+  MHI_SENSOR_SETTER(indoor_coil_capillary)
   MHI_SENSOR_SETTER(indoor_coil_header)
+  MHI_SENSOR_SETTER(outdoor_heat_exchanger_temperature)
   MHI_SENSOR_SETTER(discharge_pipe_temperature)
+  MHI_SENSOR_SETTER(discharge_superheat)
   MHI_SENSOR_SETTER(expansion_valve)
   MHI_SENSOR_SETTER(indoor_fan_speed)
   MHI_SENSOR_SETTER(outdoor_fan_speed)
@@ -133,6 +137,7 @@ class MhiCnsComponent : public Component {
   uint8_t operating_data_index_{0};
   uint32_t command_failures_{0};
   bool silent_ack_pending_{false};
+  bool pending_silent_restore_{false};
   bool silent_ack_value_{false};
   uint32_t silent_ack_deadline_{0};
   sensor::Sensor *external_temperature_sensor_{nullptr};
@@ -149,6 +154,7 @@ class MhiCnsComponent : public Component {
   sensor::Sensor *checksum_errors_sensor_{nullptr};
   sensor::Sensor *command_failures_sensor_{nullptr};
 #define MHI_SENSOR_MEMBER(name) sensor::Sensor *name##_sensor_{nullptr};
+  MHI_SENSOR_MEMBER(error_code)
   MHI_SENSOR_MEMBER(indoor_temperature)
   MHI_SENSOR_MEMBER(outdoor_temperature)
   MHI_SENSOR_MEMBER(return_air_temperature)
@@ -156,8 +162,11 @@ class MhiCnsComponent : public Component {
   MHI_SENSOR_MEMBER(compressor_frequency)
   MHI_SENSOR_MEMBER(energy_this_run)
   MHI_SENSOR_MEMBER(indoor_coil_u_bend)
+  MHI_SENSOR_MEMBER(indoor_coil_capillary)
   MHI_SENSOR_MEMBER(indoor_coil_header)
+  MHI_SENSOR_MEMBER(outdoor_heat_exchanger_temperature)
   MHI_SENSOR_MEMBER(discharge_pipe_temperature)
+  MHI_SENSOR_MEMBER(discharge_superheat)
   MHI_SENSOR_MEMBER(expansion_valve)
   MHI_SENSOR_MEMBER(indoor_fan_speed)
   MHI_SENSOR_MEMBER(outdoor_fan_speed)

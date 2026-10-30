@@ -30,6 +30,7 @@ CONF_SIGNATURE_ERRORS = "signature_errors"
 CONF_CHECKSUM_ERRORS = "checksum_errors"
 CONF_COMMAND_FAILURES = "command_failures"
 DATA_SENSORS = {
+    "error_code": (None, None, 0),
     "indoor_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "outdoor_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "return_air_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
@@ -37,8 +38,11 @@ DATA_SENSORS = {
     "compressor_frequency": (UNIT_HERTZ, DEVICE_CLASS_FREQUENCY, 1),
     "energy_this_run": (UNIT_KILOWATT_HOURS, DEVICE_CLASS_ENERGY, 2),
     "indoor_coil_u_bend": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
+    "indoor_coil_capillary": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "indoor_coil_header": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
+    "outdoor_heat_exchanger_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "discharge_pipe_temperature": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
+    "discharge_superheat": (UNIT_CELSIUS, DEVICE_CLASS_TEMPERATURE, 1),
     "expansion_valve": ("pulse", None, 0),
     "indoor_fan_speed": (None, None, 0),
     "outdoor_fan_speed": (None, None, 0),

@@ -74,7 +74,8 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
   }
 
   const bool indoor = (frame[9] & 0x80) != 0;
-  const bool operation_data = (frame[DB10] & 0x30) == 0x10;
+  const uint8_t data_class = frame[DB10] & 0x30;
+  const bool operation_data = data_class == 0x10 || data_class == 0x20;
   if (operation_data || frame[DB9] == 0xDD) {
     switch (frame[DB9]) {
       case 0x94:
@@ -89,6 +90,8 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
       case 0x81:
         if (indoor && (frame[DB10] & 0x30) == 0x20)
           state.indoor_coil_u_bend = 0.327f * frame[DB11] - 11.4f;
+        else if (!indoor && (frame[DB10] & 0x30) == 0x10)
+          state.indoor_coil_capillary = 0.275f * frame[DB11] - 47.0f;
         break;
       case 0x87:
         if (indoor) state.indoor_coil_header = 0.327f * frame[DB11] - 11.4f;
@@ -110,6 +113,12 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
       }
       case 0x85:
         if (!indoor) state.discharge_pipe_temperature = frame[DB11] < 0x12 ? NAN : frame[DB11] / 2.0f + 32.0f;
+        break;
+      case 0x82:
+        if (!indoor) state.outdoor_heat_exchanger_temperature = 0.327f * frame[DB11] - 11.4f;
+        break;
+      case 0xB1:
+        if (!indoor) state.discharge_superheat = frame[DB11] / 2.0f;
         break;
       case 0x90:
         if (!indoor) state.current_amps = frame[DB11] * 14.0f / 51.0f;

@@ -26,9 +26,9 @@ testing is still required before replacing an existing installation.
 - Persistent mode, target, fan, vanes, 3D Auto and Silent Operation
 - Vertical and horizontal vane selectors
 - External room-temperature injection with stale-data fallback
+- Four-way climate swing plus direct vertical and horizontal vane positions
 - Command acknowledgement and failure diagnostics
-- Operating-data sensors, decoded runtime states and communication health
-- Configurable self-clean/dry-out sequence
+- Original MHI operating-data channels without calculated power estimates
 - Versioned persistent settings with migration
 - Host protocol tests and automatic D1 Mini firmware compilation
 
