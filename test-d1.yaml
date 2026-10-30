@@ -40,6 +40,8 @@ button:
     trace_capture:
       name: Capture MHI Trace
       duration: 15s
+    discovery_scan:
+      name: Discover CNS Data
 
 select:
   - platform: mhi_cns
@@ -94,3 +96,5 @@ binary_sensor:
     healthy: {name: Communication Healthy}
     defrost: {name: Defrost}
     compressor_running: {name: Compressor Running}
+    occupancy: {name: Occupancy}
+    self_clean_operation: {name: Self Clean Operation}

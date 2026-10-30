@@ -17,4 +17,11 @@ class MhiCnsTraceButton : public button::Button,
   uint32_t duration_ms_{15000};
 };
 
+class MhiCnsDiscoveryButton : public button::Button,
+                              public Component,
+                              public Parented<MhiCnsComponent> {
+ protected:
+  void press_action() override { this->parent_->start_discovery_scan(); }
+};
+
 }  // namespace esphome::mhi_cns

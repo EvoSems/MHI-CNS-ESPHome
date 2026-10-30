@@ -39,6 +39,9 @@ struct AcState {
   uint8_t error_code{0};
   bool silent_operation{false};
   bool defrost{false};
+  bool compressor_running{false};
+  bool occupancy_detected{false};
+  bool self_clean_operation{false};
   float outdoor_temperature{NAN};
   float return_air_temperature{NAN};
   float current_amps{NAN};

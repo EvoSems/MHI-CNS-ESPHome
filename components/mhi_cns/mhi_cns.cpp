@@ -13,6 +13,8 @@ static constexpr uint32_t SAVE_DELAY_MS = 5000;
 static constexpr uint32_t DIAGNOSTIC_INTERVAL_MS = 30000;
 static constexpr uint32_t OPERATING_DATA_PUBLISH_MS = 5000;
 static constexpr uint32_t ROOM_TEMPERATURE_REPORT_MS = 15000;
+static constexpr uint32_t DISCOVERY_REPLY_TIMEOUT_MS = 500;
+static constexpr uint32_t DISCOVERY_REQUEST_GAP_MS = 100;
 static constexpr uint8_t SETTINGS_VERSION = 2;
 
 struct OperatingDataRequest { uint8_t selector; uint8_t code; };
@@ -80,7 +82,23 @@ void MhiCnsComponent::loop() {
     frame_command.set_room_temperature = true;
     frame_command.room_temperature = this->external_temperature_;
   }
-  if (this->alternate_frame_ && this->retries_remaining_ == 0 && ++this->operating_data_index_ >= 20) {
+  if (this->discovery_active_ && this->discovery_pending_ &&
+      static_cast<int32_t>(millis() - this->discovery_deadline_) >= 0) {
+    this->discovery_timeouts_++;
+    this->advance_discovery_scan_();
+  }
+  if (this->discovery_active_ && !this->discovery_pending_ && this->retries_remaining_ == 0 &&
+      this->alternate_frame_ && static_cast<int32_t>(millis() - this->discovery_next_request_at_) >= 0) {
+    static constexpr uint8_t SELECTORS[] = {0xC0, 0x40};
+    frame_command.request_operating_data = true;
+    frame_command.operating_data_selector = SELECTORS[this->discovery_selector_index_];
+    frame_command.operating_data_code = static_cast<uint8_t>(this->discovery_code_);
+    this->discovery_pending_ = true;
+    this->discovery_pending_selector_ = frame_command.operating_data_selector;
+    this->discovery_pending_code_ = frame_command.operating_data_code;
+    this->discovery_deadline_ = millis() + DISCOVERY_REPLY_TIMEOUT_MS;
+  } else if (!this->discovery_active_ && this->alternate_frame_ && this->retries_remaining_ == 0 &&
+             ++this->operating_data_index_ >= 20) {
     static uint8_t request_index = 0;
     this->operating_data_index_ = 0;
     frame_command.request_operating_data = true;
@@ -122,6 +140,11 @@ void MhiCnsComponent::loop() {
                static_cast<unsigned long>(this->trace_frame_number_));
       this->trace_until_ = 0;
     }
+  }
+  if (this->discovery_active_) {
+    this->handle_discovery_reply_(this->rx_.data());
+    if (this->frame_size_ == LONG_FRAME_SIZE)
+      this->log_extended_state_if_changed_(this->rx_.data());
   }
   // Operating-data replies contain only the requested value. Start with the
   // accumulated state so a temperature/current reply does not erase all the
@@ -275,6 +298,64 @@ void MhiCnsComponent::start_trace_capture(uint32_t duration_ms) {
   this->trace_until_ = millis() + duration_ms;
   ESP_LOGI("mhi_cns.trace", "Starting paired MISO/MOSI trace for %.1f seconds",
            duration_ms / 1000.0f);
+}
+
+void MhiCnsComponent::start_discovery_scan() {
+  if (this->discovery_active_) {
+    ESP_LOGI("mhi_cns.discovery", "Discovery scan is already running");
+    return;
+  }
+  this->discovery_active_ = true;
+  this->discovery_pending_ = false;
+  this->discovery_selector_index_ = 0;
+  this->discovery_code_ = 0;
+  this->discovery_found_ = 0;
+  this->discovery_timeouts_ = 0;
+  this->discovery_next_request_at_ = millis();
+  this->discovery_extended_state_valid_ = false;
+  ESP_LOGI("mhi_cns.discovery", "Starting read-only CNS discovery scan (indoor C0, outdoor 40, codes 00-FF)");
+  ESP_LOGI("mhi_cns.discovery", "CSV header: selector,code,reply_db6,op1,op2,op3");
+}
+
+void MhiCnsComponent::advance_discovery_scan_() {
+  this->discovery_pending_ = false;
+  this->discovery_next_request_at_ = millis() + DISCOVERY_REQUEST_GAP_MS;
+  this->discovery_code_++;
+  if (this->discovery_code_ <= 0xFF)
+    return;
+  this->discovery_code_ = 0;
+  this->discovery_selector_index_++;
+  if (this->discovery_selector_index_ < 2)
+    return;
+  this->discovery_active_ = false;
+  ESP_LOGI("mhi_cns.discovery", "Discovery complete: %u replies, %u timeouts; routine polling resumed",
+           this->discovery_found_, this->discovery_timeouts_);
+}
+
+void MhiCnsComponent::handle_discovery_reply_(const uint8_t *frame) {
+  if (!this->discovery_pending_ || frame[12] != this->discovery_pending_code_)
+    return;
+  // OP1=FF is the request marker/no-value sentinel. OP1=00 is retained in the
+  // log because a valid read may report zero; this scanner never transmits it.
+  if (frame[13] == 0xFF && frame[14] == 0xFF && frame[15] == 0xFF)
+    return;
+  ESP_LOGI("mhi_cns.discovery", "%02X,%02X,%02X,%02X,%02X,%02X",
+           this->discovery_pending_selector_, this->discovery_pending_code_, frame[9],
+           frame[13], frame[14], frame[15]);
+  this->discovery_found_++;
+  this->advance_discovery_scan_();
+}
+
+void MhiCnsComponent::log_extended_state_if_changed_(const uint8_t *frame) {
+  std::array<uint8_t, 8> next{};
+  for (size_t i = 0; i < next.size(); i++)
+    next[i] = frame[20 + i];
+  if (this->discovery_extended_state_valid_ && next == this->discovery_extended_state_)
+    return;
+  this->discovery_extended_state_ = next;
+  this->discovery_extended_state_valid_ = true;
+  ESP_LOGI("mhi_cns.discovery", "EXT,raw20-27,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X",
+           next[0], next[1], next[2], next[3], next[4], next[5], next[6], next[7]);
 }
 
 void MhiCnsComponent::queue_persisted_settings_() {
@@ -438,10 +519,16 @@ void MhiCnsComponent::publish_operating_data_() {
 #undef PUB_DISCRETE
   if (this->defrost_sensor_ && (!this->defrost_sensor_->has_state() || this->defrost_sensor_->state != this->state_.defrost))
     this->defrost_sensor_->publish_state(this->state_.defrost);
-  const bool compressor_running = !std::isnan(this->state_.compressor_frequency) && this->state_.compressor_frequency > 0.0f;
+  const bool compressor_running = this->state_.compressor_running;
   if (this->compressor_running_sensor_ && (!this->compressor_running_sensor_->has_state() ||
       this->compressor_running_sensor_->state != compressor_running))
     this->compressor_running_sensor_->publish_state(compressor_running);
+  if (this->occupancy_sensor_ && (!this->occupancy_sensor_->has_state() ||
+      this->occupancy_sensor_->state != this->state_.occupancy_detected))
+    this->occupancy_sensor_->publish_state(this->state_.occupancy_detected);
+  if (this->self_clean_operation_sensor_ && (!this->self_clean_operation_sensor_->has_state() ||
+      this->self_clean_operation_sensor_->state != this->state_.self_clean_operation))
+    this->self_clean_operation_sensor_->publish_state(this->state_.self_clean_operation);
 }
 
 }  // namespace esphome::mhi_cns

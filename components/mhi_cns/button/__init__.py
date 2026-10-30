@@ -6,8 +6,12 @@ from .. import CONF_MHI_CNS_ID, MhiCnsComponent, mhi_cns_ns
 
 CONF_TRACE_CAPTURE = "trace_capture"
 CONF_DURATION = "duration"
+CONF_DISCOVERY_SCAN = "discovery_scan"
 MhiCnsTraceButton = mhi_cns_ns.class_(
     "MhiCnsTraceButton", button.Button, cg.Component, cg.Parented.template(MhiCnsComponent)
+)
+MhiCnsDiscoveryButton = mhi_cns_ns.class_(
+    "MhiCnsDiscoveryButton", button.Button, cg.Component, cg.Parented.template(MhiCnsComponent)
 )
 
 CONFIG_SCHEMA = cv.Schema({
@@ -15,6 +19,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_TRACE_CAPTURE): button.button_schema(MhiCnsTraceButton, icon="mdi:console-line").extend({
         cv.Optional(CONF_DURATION, default="15s"): cv.positive_time_period_milliseconds,
     }),
+    cv.Optional(CONF_DISCOVERY_SCAN): button.button_schema(MhiCnsDiscoveryButton, icon="mdi:database-search"),
 })
 
 async def to_code(config):
@@ -24,3 +29,8 @@ async def to_code(config):
         await cg.register_component(var, value)
         await cg.register_parented(var, parent)
         cg.add(var.set_duration(value[CONF_DURATION].total_milliseconds))
+    if value := config.get(CONF_DISCOVERY_SCAN):
+        parent = await cg.get_variable(config[CONF_MHI_CNS_ID])
+        var = await button.new_button(value)
+        await cg.register_component(var, value)
+        await cg.register_parented(var, parent)

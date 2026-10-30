@@ -30,6 +30,9 @@ testing is still required before replacing an existing installation.
 - Command acknowledgement and failure diagnostics
 - Original MHI operating-data channels without calculated power estimates
 - Bounded paired MISO/MOSI trace capture from a Home Assistant button
+- Read-only indoor/outdoor operation-data discovery scan with CSV log output
+- Extended 33-byte state decoding for occupancy, LR vanes, 3D Auto, compressor
+  running and the reported self-clean flag
 - Versioned persistent settings with migration
 - Host protocol tests and automatic D1 Mini firmware compilation
 
@@ -64,3 +67,18 @@ switch:
 The implementation is based on public CNS frame documentation and independently
 verified protocol findings from MHI-AC-Ctrl, MHI2MQTT and the WF-RAC research.
 No source code is copied from those projects.
+
+## Discovery scan
+
+Add `discovery_scan` under the `mhi_cns` button platform and press it once.
+The component temporarily pauses routine operation-data polling, reads codes
+`00` through `FF` for the indoor (`C0`) and outdoor (`40`) selectors, then
+resumes normal polling. It never sends a control command and does not change
+power or settings. Useful replies are logged under `mhi_cns.discovery` as CSV:
+
+```
+selector,code,reply_db6,op1,op2,op3
+```
+
+Unknown combinations remain model-dependent. The scan deliberately sends only
+the documented read form, where OP1, OP2 and OP3 are all `FF`.

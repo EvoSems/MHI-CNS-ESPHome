@@ -10,6 +10,7 @@ constexpr size_t DB1 = 4;
 constexpr size_t DB2 = 5;
 constexpr size_t DB3 = 6;
 constexpr size_t DB4 = 7;
+constexpr size_t DB7 = 10;
 constexpr size_t DB9 = 12;
 constexpr size_t DB10 = 13;
 constexpr size_t DB11 = 14;
@@ -20,6 +21,8 @@ constexpr size_t CHECKSUM_HIGH = 18;
 constexpr size_t CHECKSUM_LOW = 19;
 constexpr size_t DB16 = 21;
 constexpr size_t DB17 = 22;
+constexpr size_t RAW20 = 20;
+constexpr size_t RAW25 = 25;
 constexpr size_t LONG_CHECKSUM = 32;
 }  // namespace
 
@@ -63,14 +66,18 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
   if (frame[DB3] != 0xFF)
     state.room_temperature = (static_cast<int>(frame[DB3]) - 61) / 4.0f;
   state.error_code = frame[DB4];
+  state.compressor_running = (frame[DB7] & 0x02) != 0;
 
   const uint8_t vertical = (frame[DB0] & 0xC0) | ((frame[DB1] & 0xB0) >> 4);
   state.vertical_vanes = (vertical & 0x40) ? 5 : (vertical & 0x03) + 1;
 
   if (size == LONG_FRAME_SIZE) {
-    const uint8_t horizontal = (frame[DB16] & 0x07) | ((frame[DB17] & 0x01) << 4);
-    state.horizontal_vanes = (horizontal & 0x10) ? 8 : (horizontal & 0x07) + 1;
-    state.auto_3d = (frame[DB17] & 0x04) != 0;
+    // Extended CNS state: raw 20 carries occupancy, raw 21 carries the
+    // left/right position and raw 22 carries LR-auto/3D Auto flags.
+    state.occupancy_detected = (frame[RAW20] & 0x01) != 0;
+    state.horizontal_vanes = (frame[DB17] & 0x03) == 0x01 ? 8 : (frame[DB16] & 0x1F) + 1;
+    state.auto_3d = (frame[DB17] & 0x0C) == 0x04;
+    state.self_clean_operation = (frame[RAW25] & 0x01) != 0;
   }
 
   const bool indoor = (frame[9] & 0x80) != 0;

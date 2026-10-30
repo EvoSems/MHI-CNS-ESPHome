@@ -18,9 +18,12 @@ static std::array<uint8_t, LONG_FRAME_SIZE> make_status(size_t size) {
   frame[5] = 48;
   frame[6] = 157;
   frame[7] = 0;
+  frame[10] = 2;
   if (size == LONG_FRAME_SIZE) {
     frame[21] = 2;
     frame[22] = 4;
+    frame[20] = 1;
+    frame[25] = 1;
   }
   const uint16_t short_sum = FrameCodec::checksum(frame.data(), 18);
   frame[18] = short_sum >> 8;
@@ -48,6 +51,13 @@ int main() {
     assert(state.fan == 7);
     assert(std::fabs(state.target_temperature - 24.0f) < 0.01f);
     assert(std::fabs(state.room_temperature - 24.0f) < 0.01f);
+    assert(state.compressor_running);
+    if (size == LONG_FRAME_SIZE) {
+      assert(state.occupancy_detected);
+      assert(state.self_clean_operation);
+      assert(state.horizontal_vanes == 3);
+      assert(state.auto_3d);
+    }
 
     frame[5] ^= 1;
     assert(FrameCodec::validate(frame.data(), size) == FrameError::INVALID_CHECKSUM);

@@ -53,6 +53,15 @@ select:
     horizontal_vanes:
       name: Horizontal Vanes
 
+button:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    trace_capture:
+      name: Capture MHI Trace
+      duration: 15s
+    discovery_scan:
+      name: Discover CNS Data
+
 sensor:
   - platform: mhi_cns
     mhi_cns_id: mhi_bus
@@ -70,3 +79,13 @@ sensor:
       name: Signature Errors
     checksum_errors:
       name: Checksum Errors
+
+binary_sensor:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    compressor_running:
+      name: Compressor Running
+    occupancy:
+      name: Occupancy
+    self_clean_operation:
+      name: Self Clean Operation
