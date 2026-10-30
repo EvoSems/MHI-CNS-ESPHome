@@ -31,6 +31,15 @@ switch:
       name: Test Power
     auto_3d:
       name: Test 3D Auto
+    silent_operation:
+      name: Silent Operation
+
+button:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    self_clean:
+      name: Self Clean
+      duration: 120min
 
 select:
   - platform: mhi_cns
@@ -57,3 +66,32 @@ sensor:
       name: Signature Errors
     checksum_errors:
       name: Checksum Errors
+    command_failures:
+      name: Command Failures
+    outdoor_temperature: {name: Outdoor Temperature}
+    return_air_temperature: {name: Return Air Temperature}
+    current: {name: Current}
+    compressor_frequency: {name: Compressor Frequency}
+    energy_this_run: {name: Energy This Run}
+    indoor_coil_u_bend: {name: Indoor Coil U Bend}
+    indoor_coil_header: {name: Indoor Coil Header}
+    discharge_pipe_temperature: {name: Discharge Pipe Temperature}
+    expansion_valve: {name: Expansion Valve}
+    indoor_fan_speed: {name: Indoor Fan Speed}
+    outdoor_fan_speed: {name: Outdoor Fan Speed}
+    protection_code: {name: Protection Code}
+    indoor_run_hours: {name: Indoor Run Hours}
+    compressor_run_hours: {name: Compressor Run Hours}
+
+binary_sensor:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    healthy: {name: Communication Healthy}
+    defrost: {name: Defrost}
+    compressor_running: {name: Compressor Running}
+
+text_sensor:
+  - platform: mhi_cns
+    mhi_cns_id: mhi_bus
+    error_status: {name: Error Status}
+    protection_status: {name: Protection Status}

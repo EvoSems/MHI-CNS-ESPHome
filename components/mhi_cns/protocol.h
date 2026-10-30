@@ -36,6 +36,22 @@ struct AcState {
   uint8_t horizontal_vanes{0};
   bool auto_3d{false};
   uint8_t error_code{0};
+  bool silent_operation{false};
+  bool defrost{false};
+  float outdoor_temperature{NAN};
+  float return_air_temperature{NAN};
+  float current_amps{NAN};
+  float compressor_frequency{NAN};
+  float energy_this_run{NAN};
+  float indoor_coil_u_bend{NAN};
+  float indoor_coil_header{NAN};
+  float discharge_pipe_temperature{NAN};
+  uint16_t expansion_valve{0};
+  uint8_t indoor_fan_speed{0};
+  uint8_t outdoor_fan_speed{0};
+  uint8_t protection_code{0};
+  uint32_t indoor_run_hours{0};
+  uint32_t compressor_run_hours{0};
 };
 
 struct CommandSnapshot {
@@ -53,6 +69,13 @@ struct CommandSnapshot {
   uint8_t horizontal_vanes{0};
   bool set_auto_3d{false};
   bool auto_3d{false};
+  bool set_silent{false};
+  bool silent{false};
+  bool set_room_temperature{false};
+  float room_temperature{NAN};
+  bool request_operating_data{false};
+  uint8_t operating_data_selector{0x80};
+  uint8_t operating_data_code{0xFF};
 };
 
 class FrameCodec {

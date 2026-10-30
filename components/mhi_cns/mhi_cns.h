@@ -1,6 +1,8 @@
 #pragma once
 
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/component.h"
 #include "esphome/core/preferences.h"
 #include "esp8266_transport.h"
@@ -36,6 +38,10 @@ class MhiCnsComponent : public Component {
   void set_vertical_vanes(uint8_t value);
   void set_horizontal_vanes(uint8_t value);
   void set_auto_3d(bool value);
+  void set_silent_operation(bool value);
+  void start_self_clean(uint32_t duration_ms);
+  void set_external_temperature_sensor(sensor::Sensor *sensor) { this->external_temperature_sensor_ = sensor; }
+  void set_external_temperature_timeout(uint32_t value) { this->external_temperature_timeout_ms_ = value; }
 
   void set_frame_errors_sensor(sensor::Sensor *sensor) { this->frame_errors_sensor_ = sensor; }
   void set_valid_frames_sensor(sensor::Sensor *sensor) { this->valid_frames_sensor_ = sensor; }
@@ -44,10 +50,32 @@ class MhiCnsComponent : public Component {
   void set_clock_timeouts_sensor(sensor::Sensor *sensor) { this->clock_timeouts_sensor_ = sensor; }
   void set_signature_errors_sensor(sensor::Sensor *sensor) { this->signature_errors_sensor_ = sensor; }
   void set_checksum_errors_sensor(sensor::Sensor *sensor) { this->checksum_errors_sensor_ = sensor; }
+  void set_command_failures_sensor(sensor::Sensor *sensor) { this->command_failures_sensor_ = sensor; }
+#define MHI_SENSOR_SETTER(name) void set_##name##_sensor(sensor::Sensor *s) { this->name##_sensor_ = s; }
+  MHI_SENSOR_SETTER(outdoor_temperature)
+  MHI_SENSOR_SETTER(return_air_temperature)
+  MHI_SENSOR_SETTER(current)
+  MHI_SENSOR_SETTER(compressor_frequency)
+  MHI_SENSOR_SETTER(energy_this_run)
+  MHI_SENSOR_SETTER(indoor_coil_u_bend)
+  MHI_SENSOR_SETTER(indoor_coil_header)
+  MHI_SENSOR_SETTER(discharge_pipe_temperature)
+  MHI_SENSOR_SETTER(expansion_valve)
+  MHI_SENSOR_SETTER(indoor_fan_speed)
+  MHI_SENSOR_SETTER(outdoor_fan_speed)
+  MHI_SENSOR_SETTER(protection_code)
+  MHI_SENSOR_SETTER(indoor_run_hours)
+  MHI_SENSOR_SETTER(compressor_run_hours)
+#undef MHI_SENSOR_SETTER
+  void set_healthy_sensor(binary_sensor::BinarySensor *s) { this->healthy_sensor_ = s; }
+  void set_defrost_sensor(binary_sensor::BinarySensor *s) { this->defrost_sensor_ = s; }
+  void set_compressor_running_sensor(binary_sensor::BinarySensor *s) { this->compressor_running_sensor_ = s; }
+  void set_error_text_sensor(text_sensor::TextSensor *s) { this->error_text_sensor_ = s; }
+  void set_protection_text_sensor(text_sensor::TextSensor *s) { this->protection_text_sensor_ = s; }
 
  protected:
   struct PersistedSettings {
-    uint8_t version{1};
+    uint8_t version{2};
     uint8_t valid{0};
     uint8_t mode{0};
     uint8_t fan{7};
@@ -55,6 +83,18 @@ class MhiCnsComponent : public Component {
     uint8_t horizontal_vanes{0};
     uint8_t auto_3d{0};
     uint8_t target_temperature_half_degrees{40};
+    uint8_t silent_operation{0};
+  };
+
+  struct LegacyPersistedSettingsV1 {
+    uint8_t version;
+    uint8_t valid;
+    uint8_t mode;
+    uint8_t fan;
+    uint8_t vertical_vanes;
+    uint8_t horizontal_vanes;
+    uint8_t auto_3d;
+    uint8_t target_temperature_half_degrees;
   };
 
   void queue_persisted_settings_();
@@ -63,6 +103,8 @@ class MhiCnsComponent : public Component {
   void publish_diagnostics_if_due_();
   void notify_state_();
   void update_settings_from_state_(const AcState &state);
+  void publish_operating_data_();
+  bool command_acknowledged_(const AcState &state) const;
 
   uint8_t frame_size_{SHORT_FRAME_SIZE};
   uint8_t command_retries_{3};
@@ -86,6 +128,16 @@ class MhiCnsComponent : public Component {
   uint32_t checksum_errors_{0};
   uint32_t last_valid_frame_at_{0};
   uint32_t diagnostics_at_{0};
+  uint32_t operating_data_at_{0};
+  uint8_t operating_data_index_{0};
+  uint32_t command_failures_{0};
+  bool silent_ack_pending_{false};
+  bool silent_ack_value_{false};
+  uint32_t silent_ack_deadline_{0};
+  sensor::Sensor *external_temperature_sensor_{nullptr};
+  float external_temperature_{NAN};
+  uint32_t external_temperature_at_{0};
+  uint32_t external_temperature_timeout_ms_{300000};
 
   sensor::Sensor *frame_errors_sensor_{nullptr};
   sensor::Sensor *valid_frames_sensor_{nullptr};
@@ -94,6 +146,28 @@ class MhiCnsComponent : public Component {
   sensor::Sensor *clock_timeouts_sensor_{nullptr};
   sensor::Sensor *signature_errors_sensor_{nullptr};
   sensor::Sensor *checksum_errors_sensor_{nullptr};
+  sensor::Sensor *command_failures_sensor_{nullptr};
+#define MHI_SENSOR_MEMBER(name) sensor::Sensor *name##_sensor_{nullptr};
+  MHI_SENSOR_MEMBER(outdoor_temperature)
+  MHI_SENSOR_MEMBER(return_air_temperature)
+  MHI_SENSOR_MEMBER(current)
+  MHI_SENSOR_MEMBER(compressor_frequency)
+  MHI_SENSOR_MEMBER(energy_this_run)
+  MHI_SENSOR_MEMBER(indoor_coil_u_bend)
+  MHI_SENSOR_MEMBER(indoor_coil_header)
+  MHI_SENSOR_MEMBER(discharge_pipe_temperature)
+  MHI_SENSOR_MEMBER(expansion_valve)
+  MHI_SENSOR_MEMBER(indoor_fan_speed)
+  MHI_SENSOR_MEMBER(outdoor_fan_speed)
+  MHI_SENSOR_MEMBER(protection_code)
+  MHI_SENSOR_MEMBER(indoor_run_hours)
+  MHI_SENSOR_MEMBER(compressor_run_hours)
+#undef MHI_SENSOR_MEMBER
+  binary_sensor::BinarySensor *healthy_sensor_{nullptr};
+  binary_sensor::BinarySensor *defrost_sensor_{nullptr};
+  binary_sensor::BinarySensor *compressor_running_sensor_{nullptr};
+  text_sensor::TextSensor *error_text_sensor_{nullptr};
+  text_sensor::TextSensor *protection_text_sensor_{nullptr};
 };
 
 }  // namespace esphome::mhi_cns

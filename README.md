@@ -20,6 +20,18 @@ This is a new implementation. Frame validation and codec tests run on the host.
 ESP8266 firmware compilation is required for every change. Physical hardware
 testing is still required before replacing an existing installation.
 
+## Features
+
+- Safe-boot climate and dedicated power control
+- Persistent mode, target, fan, vanes, 3D Auto and Silent Operation
+- Vertical and horizontal vane selectors
+- External room-temperature injection with stale-data fallback
+- Command acknowledgement and failure diagnostics
+- Operating-data sensors, decoded runtime states and communication health
+- Configurable self-clean/dry-out sequence
+- Versioned persistent settings with migration
+- Host protocol tests and automatic D1 Mini firmware compilation
+
 ## Example
 
 ```yaml

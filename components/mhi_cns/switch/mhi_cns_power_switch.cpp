@@ -28,4 +28,10 @@ void MhiCnsAuto3dSwitch::on_mhi_state(const AcState &state) {
     this->publish_state(state.auto_3d);
 }
 
+void MhiCnsSilentSwitch::setup() { this->parent_->add_listener(this); }
+void MhiCnsSilentSwitch::write_state(bool state) { this->parent_->set_silent_operation(state); }
+void MhiCnsSilentSwitch::on_mhi_state(const AcState &state) {
+  if (state.valid) this->publish_state(state.silent_operation);
+}
+
 }  // namespace esphome::mhi_cns

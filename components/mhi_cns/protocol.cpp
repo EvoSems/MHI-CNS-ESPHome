@@ -69,6 +69,64 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
     state.horizontal_vanes = (horizontal & 0x10) ? 8 : (horizontal & 0x07) + 1;
     state.auto_3d = (frame[DB17] & 0x04) != 0;
   }
+
+  const bool indoor = (frame[9] & 0x80) != 0;
+  const bool operation_data = (frame[DB10] & 0x30) == 0x10;
+  if (operation_data || frame[DB9] == 0xDD) {
+    switch (frame[DB9]) {
+      case 0x94:
+        if (indoor) state.energy_this_run = ((frame[DB12] << 8) | frame[DB11]) * 0.25f;
+        break;
+      case 0x80:
+        if (indoor && (frame[DB10] & 0x30) == 0x20)
+          state.return_air_temperature = frame[DB11] * 0.25f - 15.0f;
+        else if (!indoor)
+          state.outdoor_temperature = (static_cast<int>(frame[DB11]) - 94) * 0.25f;
+        break;
+      case 0x81:
+        if (indoor && (frame[DB10] & 0x30) == 0x20)
+          state.indoor_coil_u_bend = 0.327f * frame[DB11] - 11.4f;
+        break;
+      case 0x87:
+        if (indoor) state.indoor_coil_header = 0.327f * frame[DB11] - 11.4f;
+        break;
+      case 0x1F:
+        if (indoor) state.indoor_fan_speed = frame[DB10] & 0x0F;
+        else state.outdoor_fan_speed = frame[DB10] & 0x0F;
+        break;
+      case 0x1E:
+        if (indoor) state.indoor_run_hours = frame[DB11] * 100U;
+        else state.compressor_run_hours = frame[DB11] * 100U;
+        break;
+      case 0x11: {
+        if (!indoor) {
+          const uint16_t raw = ((frame[DB10] << 8) | frame[DB11]) & 0x0FFF;
+          state.compressor_frequency = (raw >> 8) * 25.6f + (raw & 0xFF) * 0.1f;
+        }
+        break;
+      }
+      case 0x85:
+        if (!indoor) state.discharge_pipe_temperature = frame[DB11] < 0x12 ? NAN : frame[DB11] / 2.0f + 32.0f;
+        break;
+      case 0x90:
+        if (!indoor) state.current_amps = frame[DB11] * 14.0f / 51.0f;
+        break;
+      case 0x7C:
+        if (!indoor) state.protection_code = frame[DB11];
+        break;
+      case 0x0C:
+        if (!indoor) state.defrost = (frame[DB10] & 0x01) != 0;
+        break;
+      case 0x13:
+        if (!indoor) state.expansion_valve = (frame[DB12] << 8) | frame[DB11];
+        break;
+      case 0xDD:
+        if (frame[DB10] == 0x80) state.silent_operation = (frame[DB11] & 0x20) != 0;
+        break;
+      default:
+        break;
+    }
+  }
   return true;
 }
 
@@ -79,12 +137,15 @@ void FrameCodec::build_response(std::array<uint8_t, LONG_FRAME_SIZE> &frame, siz
   frame[1] = 0x00;
   frame[2] = 0x07;
   frame[DB3] = 0xFF;
+  frame[9] = 0x80;
   frame[DB9] = 0xFF;
   frame[DB10] = 0xFF;
   frame[DB11] = 0xFF;
   frame[DB12] = 0xFF;
   frame[DB13] = 0x0F;
   frame[DB14] = alternate_frame ? 0x04 : 0x00;
+  if (command.set_room_temperature && !std::isnan(command.room_temperature))
+    frame[DB3] = static_cast<uint8_t>(std::lround(command.room_temperature * 4.0f + 61.0f));
 
   if (alternate_frame) {
     if (command.set_power)
@@ -115,6 +176,14 @@ void FrameCodec::build_response(std::array<uint8_t, LONG_FRAME_SIZE> &frame, siz
     }
     if (size == LONG_FRAME_SIZE && command.set_auto_3d)
       frame[DB17] |= 0x0A | (command.auto_3d ? 0x04 : 0x00);
+    if (command.set_silent) {
+      frame[9] = 0x00;
+      frame[DB9] = 0x21;
+      frame[DB10] = command.silent ? 0x01 : 0x00;
+    } else if (command.request_operating_data) {
+      frame[9] = command.operating_data_selector;
+      frame[DB9] = command.operating_data_code;
+    }
   }
 
   const uint16_t short_checksum = checksum(frame.data(), CHECKSUM_HIGH);

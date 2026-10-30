@@ -59,6 +59,25 @@ int main() {
   assert((tx[3] & 0x1C) == static_cast<uint8_t>(HvacMode::HEAT));
   assert(tx[5] == (0x80 | 45));
 
+  command = {};
+  command.set_silent = true;
+  command.silent = true;
+  command.set_room_temperature = true;
+  command.room_temperature = 23.5f;
+  FrameCodec::build_response(tx, LONG_FRAME_SIZE, true, command);
+  assert(tx[6] == 155);
+  assert(tx[9] == 0x00);
+  assert(tx[12] == 0x21);
+  assert(tx[13] == 0x01);
+
+  command = {};
+  command.request_operating_data = true;
+  command.operating_data_selector = 0x40;
+  command.operating_data_code = 0x90;
+  FrameCodec::build_response(tx, LONG_FRAME_SIZE, true, command);
+  assert(tx[9] == 0x40);
+  assert(tx[12] == 0x90);
+
   std::cout << "protocol tests passed\n";
   return 0;
 }
