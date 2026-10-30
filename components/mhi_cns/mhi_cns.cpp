@@ -398,11 +398,18 @@ bool MhiCnsComponent::command_acknowledged_(const AcState &state) const {
 void MhiCnsComponent::publish_operating_data_() {
   if (static_cast<int32_t>(millis() - this->operating_data_at_) < 0) return;
   this->operating_data_at_ = millis() + OPERATING_DATA_PUBLISH_MS;
-#define PUB(name, value) if (this->name##_sensor_ != nullptr && !std::isnan(value)) this->name##_sensor_->publish_state(value)
+#define PUB(name, value) do { \
+  const float next = (value); \
+  if (this->name##_sensor_ != nullptr && !std::isnan(next) && \
+      (!this->name##_sensor_->has_state() || std::fabs(this->name##_sensor_->state - next) > 0.01f)) \
+    this->name##_sensor_->publish_state(next); \
+} while (false)
   PUB(error_code, this->state_.error_code);
   if (this->indoor_temperature_sensor_) {
     const float indoor = this->state_.reported_room_temperature;
-    if (!std::isnan(indoor)) this->indoor_temperature_sensor_->publish_state(indoor);
+    if (!std::isnan(indoor) && (!this->indoor_temperature_sensor_->has_state() ||
+        std::fabs(this->indoor_temperature_sensor_->state - indoor) > 0.01f))
+      this->indoor_temperature_sensor_->publish_state(indoor);
   }
   PUB(outdoor_temperature, this->state_.outdoor_temperature);
   PUB(return_air_temperature, this->state_.return_air_temperature);
@@ -416,14 +423,25 @@ void MhiCnsComponent::publish_operating_data_() {
   PUB(discharge_pipe_temperature, this->state_.discharge_pipe_temperature);
   PUB(discharge_superheat, this->state_.discharge_superheat);
 #undef PUB
-  if (this->expansion_valve_sensor_) this->expansion_valve_sensor_->publish_state(this->state_.expansion_valve);
-  if (this->indoor_fan_speed_sensor_) this->indoor_fan_speed_sensor_->publish_state(this->state_.indoor_fan_speed);
-  if (this->outdoor_fan_speed_sensor_) this->outdoor_fan_speed_sensor_->publish_state(this->state_.outdoor_fan_speed);
-  if (this->protection_code_sensor_) this->protection_code_sensor_->publish_state(this->state_.protection_code);
-  if (this->indoor_run_hours_sensor_) this->indoor_run_hours_sensor_->publish_state(this->state_.indoor_run_hours);
-  if (this->compressor_run_hours_sensor_) this->compressor_run_hours_sensor_->publish_state(this->state_.compressor_run_hours);
-  if (this->defrost_sensor_) this->defrost_sensor_->publish_state(this->state_.defrost);
-  if (this->compressor_running_sensor_) this->compressor_running_sensor_->publish_state(!std::isnan(this->state_.compressor_frequency) && this->state_.compressor_frequency > 0.0f);
+#define PUB_DISCRETE(sensor_name, value) do { \
+  const float next = (value); \
+  if (this->sensor_name##_sensor_ && (!this->sensor_name##_sensor_->has_state() || \
+      this->sensor_name##_sensor_->state != next)) \
+    this->sensor_name##_sensor_->publish_state(next); \
+} while (false)
+  PUB_DISCRETE(expansion_valve, this->state_.expansion_valve);
+  PUB_DISCRETE(indoor_fan_speed, this->state_.indoor_fan_speed);
+  PUB_DISCRETE(outdoor_fan_speed, this->state_.outdoor_fan_speed);
+  PUB_DISCRETE(protection_code, this->state_.protection_code);
+  PUB_DISCRETE(indoor_run_hours, this->state_.indoor_run_hours);
+  PUB_DISCRETE(compressor_run_hours, this->state_.compressor_run_hours);
+#undef PUB_DISCRETE
+  if (this->defrost_sensor_ && (!this->defrost_sensor_->has_state() || this->defrost_sensor_->state != this->state_.defrost))
+    this->defrost_sensor_->publish_state(this->state_.defrost);
+  const bool compressor_running = !std::isnan(this->state_.compressor_frequency) && this->state_.compressor_frequency > 0.0f;
+  if (this->compressor_running_sensor_ && (!this->compressor_running_sensor_->has_state() ||
+      this->compressor_running_sensor_->state != compressor_running))
+    this->compressor_running_sensor_->publish_state(compressor_running);
 }
 
 }  // namespace esphome::mhi_cns

@@ -14,7 +14,7 @@ void MhiCnsVerticalVanesSelect::on_mhi_state(const AcState &state) {
   if (!state.valid || state.vertical_vanes < 1 || state.vertical_vanes > 5)
     return;
   const auto option = this->at(state.vertical_vanes - 1);
-  if (option.has_value())
+  if (option.has_value() && (!this->has_state() || this->state != option.value()))
     this->publish_state(option.value());
 }
 
@@ -30,7 +30,7 @@ void MhiCnsHorizontalVanesSelect::on_mhi_state(const AcState &state) {
   if (!state.valid || state.horizontal_vanes < 1 || state.horizontal_vanes > 8)
     return;
   const auto option = this->at(state.horizontal_vanes - 1);
-  if (option.has_value())
+  if (option.has_value() && (!this->has_state() || this->state != option.value()))
     this->publish_state(option.value());
 }
 

@@ -90,6 +90,11 @@ void MhiCnsClimate::control(const climate::ClimateCall &call) {
 void MhiCnsClimate::on_mhi_state(const AcState &state) {
   if (!state.valid)
     return;
+  const auto previous_mode = this->mode;
+  const auto previous_fan_mode = this->fan_mode;
+  const auto previous_swing_mode = this->swing_mode;
+  const float previous_target_temperature = this->target_temperature;
+  const float previous_current_temperature = this->current_temperature;
   if (!state.power) {
     this->mode = climate::CLIMATE_MODE_OFF;
   } else {
@@ -120,7 +125,18 @@ void MhiCnsClimate::on_mhi_state(const AcState &state) {
                      : vertical_swing                    ? climate::CLIMATE_SWING_VERTICAL
                      : horizontal_swing                  ? climate::CLIMATE_SWING_HORIZONTAL
                                                          : climate::CLIMATE_SWING_OFF;
-  this->publish_state();
+  const auto float_changed = [](float previous, float current) {
+    return std::isnan(previous) != std::isnan(current) ||
+           (!std::isnan(previous) && std::fabs(previous - current) > 0.01f);
+  };
+  const bool changed = !this->has_published_state_ || previous_mode != this->mode ||
+                       previous_fan_mode != this->fan_mode || previous_swing_mode != this->swing_mode ||
+                       float_changed(previous_target_temperature, this->target_temperature) ||
+                       float_changed(previous_current_temperature, this->current_temperature);
+  if (changed) {
+    this->publish_state();
+    this->has_published_state_ = true;
+  }
 }
 
 }  // namespace esphome::mhi_cns

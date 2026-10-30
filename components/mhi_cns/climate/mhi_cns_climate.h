@@ -17,6 +17,7 @@ class MhiCnsClimate : public climate::Climate,
   void on_mhi_state(const AcState &state) override;
 
  protected:
+  bool has_published_state_{false};
   uint8_t last_vertical_position_{1};
   uint8_t last_horizontal_position_{1};
 };

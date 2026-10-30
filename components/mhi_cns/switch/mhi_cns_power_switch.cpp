@@ -11,7 +11,7 @@ void MhiCnsPowerSwitch::write_state(bool state) {
 }
 
 void MhiCnsPowerSwitch::on_mhi_state(const AcState &state) {
-  if (state.valid)
+  if (state.valid && (!this->has_state() || this->state != state.power))
     this->publish_state(state.power);
 }
 
@@ -24,14 +24,15 @@ void MhiCnsAuto3dSwitch::write_state(bool state) {
 }
 
 void MhiCnsAuto3dSwitch::on_mhi_state(const AcState &state) {
-  if (state.valid)
+  if (state.valid && (!this->has_state() || this->state != state.auto_3d))
     this->publish_state(state.auto_3d);
 }
 
 void MhiCnsSilentSwitch::setup() { this->parent_->add_listener(this); }
 void MhiCnsSilentSwitch::write_state(bool state) { this->parent_->set_silent_operation(state); }
 void MhiCnsSilentSwitch::on_mhi_state(const AcState &state) {
-  if (state.valid) this->publish_state(state.silent_operation);
+  if (state.valid && (!this->has_state() || this->state != state.silent_operation))
+    this->publish_state(state.silent_operation);
 }
 
 }  // namespace esphome::mhi_cns
