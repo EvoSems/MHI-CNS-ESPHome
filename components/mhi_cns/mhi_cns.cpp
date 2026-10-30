@@ -386,8 +386,6 @@ void MhiCnsComponent::publish_operating_data_() {
   if (this->compressor_run_hours_sensor_) this->compressor_run_hours_sensor_->publish_state(this->state_.compressor_run_hours);
   if (this->defrost_sensor_) this->defrost_sensor_->publish_state(this->state_.defrost);
   if (this->compressor_running_sensor_) this->compressor_running_sensor_->publish_state(!std::isnan(this->state_.compressor_frequency) && this->state_.compressor_frequency > 0.0f);
-  if (this->error_text_sensor_) this->error_text_sensor_->publish_state(this->state_.error_code == 0 ? "No error" : "AC error " + std::to_string(this->state_.error_code));
-  if (this->protection_text_sensor_) this->protection_text_sensor_->publish_state(this->state_.protection_code == 0 ? "Normal" : "Protection " + std::to_string(this->state_.protection_code));
 }
 
 }  // namespace esphome::mhi_cns

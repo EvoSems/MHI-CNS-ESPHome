@@ -2,7 +2,6 @@
 
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
-#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/component.h"
 #include "esphome/core/preferences.h"
 #include "esp8266_transport.h"
@@ -75,8 +74,6 @@ class MhiCnsComponent : public Component {
   void set_healthy_sensor(binary_sensor::BinarySensor *s) { this->healthy_sensor_ = s; }
   void set_defrost_sensor(binary_sensor::BinarySensor *s) { this->defrost_sensor_ = s; }
   void set_compressor_running_sensor(binary_sensor::BinarySensor *s) { this->compressor_running_sensor_ = s; }
-  void set_error_text_sensor(text_sensor::TextSensor *s) { this->error_text_sensor_ = s; }
-  void set_protection_text_sensor(text_sensor::TextSensor *s) { this->protection_text_sensor_ = s; }
 
  protected:
   struct PersistedSettings {
@@ -177,8 +174,6 @@ class MhiCnsComponent : public Component {
   binary_sensor::BinarySensor *healthy_sensor_{nullptr};
   binary_sensor::BinarySensor *defrost_sensor_{nullptr};
   binary_sensor::BinarySensor *compressor_running_sensor_{nullptr};
-  text_sensor::TextSensor *error_text_sensor_{nullptr};
-  text_sensor::TextSensor *protection_text_sensor_{nullptr};
 };
 
 }  // namespace esphome::mhi_cns

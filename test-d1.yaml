@@ -94,9 +94,3 @@ binary_sensor:
     healthy: {name: Communication Healthy}
     defrost: {name: Defrost}
     compressor_running: {name: Compressor Running}
-
-text_sensor:
-  - platform: mhi_cns
-    mhi_cns_id: mhi_bus
-    error_status: {name: Error Status}
-    protection_status: {name: Protection Status}
