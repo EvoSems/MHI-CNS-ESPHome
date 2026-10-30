@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install ESPHome
+        run: pip install esphome==2026.10.1
+      - name: Test protocol codec
+        run: >-
+          c++ -std=c++17 -Wall -Wextra -Werror
+          tests/protocol_test.cpp components/mhi_cns/protocol.cpp
+          -o /tmp/protocol_test && /tmp/protocol_test
+      - name: Compile D1 Mini firmware
+        run: esphome compile test-d1.yaml
