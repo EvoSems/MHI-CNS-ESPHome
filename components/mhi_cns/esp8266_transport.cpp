@@ -31,7 +31,6 @@ TransportResult Esp8266Transport::exchange(const uint8_t *tx, uint8_t *rx, size_
       high_since = micros();
     if (static_cast<uint32_t>(micros() - started) > timeout_us)
       return TransportResult::CLOCK_LOW_TIMEOUT;
-    yield();
   }
 
   for (size_t byte_index = 0; byte_index < size; byte_index++) {

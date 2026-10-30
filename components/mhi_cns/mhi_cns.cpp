@@ -39,7 +39,9 @@ void MhiCnsComponent::loop() {
 
   const bool command_transmitted = this->alternate_frame_ && this->retries_remaining_ > 0;
   FrameCodec::build_response(this->tx_, this->frame_size_, this->alternate_frame_, this->command_);
-  const auto result = this->transport_.exchange(this->tx_.data(), this->rx_.data(), this->frame_size_, 60000);
+  // A 33-byte frame plus the inter-frame idle period can approach 60 ms on
+  // some units. Keep enough margin for ESP8266 Wi-Fi interrupt jitter.
+  const auto result = this->transport_.exchange(this->tx_.data(), this->rx_.data(), this->frame_size_, 100000);
   if (result == TransportResult::NO_FRAME)
     return;
   if (result != TransportResult::OK) {
