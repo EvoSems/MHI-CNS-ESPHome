@@ -523,9 +523,9 @@ void MhiCnsComponent::publish_operating_data_() {
   if (this->compressor_running_sensor_ && (!this->compressor_running_sensor_->has_state() ||
       this->compressor_running_sensor_->state != compressor_running))
     this->compressor_running_sensor_->publish_state(compressor_running);
-  if (this->occupancy_sensor_ && (!this->occupancy_sensor_->has_state() ||
-      this->occupancy_sensor_->state != this->state_.occupancy_detected))
-    this->occupancy_sensor_->publish_state(this->state_.occupancy_detected);
+  if (this->vacant_sensor_ && (!this->vacant_sensor_->has_state() ||
+      this->vacant_sensor_->state != this->state_.vacant))
+    this->vacant_sensor_->publish_state(this->state_.vacant);
   if (this->self_clean_operation_sensor_ && (!this->self_clean_operation_sensor_->has_state() ||
       this->self_clean_operation_sensor_->state != this->state_.self_clean_operation))
     this->self_clean_operation_sensor_->publish_state(this->state_.self_clean_operation);

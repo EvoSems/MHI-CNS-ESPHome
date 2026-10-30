@@ -31,7 +31,7 @@ testing is still required before replacing an existing installation.
 - Original MHI operating-data channels without calculated power estimates
 - Bounded paired MISO/MOSI trace capture from a Home Assistant button
 - Read-only indoor/outdoor operation-data discovery scan with CSV log output
-- Extended 33-byte state decoding for occupancy, LR vanes, 3D Auto, compressor
+- Extended 33-byte state decoding for Vacant, LR vanes, 3D Auto, compressor
   running and the reported self-clean flag
 - Versioned persistent settings with migration
 - Host protocol tests and automatic D1 Mini firmware compilation

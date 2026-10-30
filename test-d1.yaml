@@ -96,5 +96,5 @@ binary_sensor:
     healthy: {name: Communication Healthy}
     defrost: {name: Defrost}
     compressor_running: {name: Compressor Running}
-    occupancy: {name: Occupancy}
-    self_clean_operation: {name: Self Clean Operation}
+    vacant: {name: Vacant}
+    self_clean_operation: {name: Self Clean Reported}

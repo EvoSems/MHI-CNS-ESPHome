@@ -53,7 +53,7 @@ int main() {
     assert(std::fabs(state.room_temperature - 24.0f) < 0.01f);
     assert(state.compressor_running);
     if (size == LONG_FRAME_SIZE) {
-      assert(state.occupancy_detected);
+      assert(state.vacant);
       assert(state.self_clean_operation);
       assert(state.horizontal_vanes == 3);
       assert(state.auto_3d);

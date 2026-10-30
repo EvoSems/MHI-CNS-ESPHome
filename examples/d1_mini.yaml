@@ -85,7 +85,7 @@ binary_sensor:
     mhi_cns_id: mhi_bus
     compressor_running:
       name: Compressor Running
-    occupancy:
-      name: Occupancy
+    vacant:
+      name: Vacant
     self_clean_operation:
-      name: Self Clean Operation
+      name: Self Clean Reported

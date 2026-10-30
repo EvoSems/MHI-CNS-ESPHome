@@ -75,7 +75,7 @@ class MhiCnsComponent : public Component {
   void set_healthy_sensor(binary_sensor::BinarySensor *s) { this->healthy_sensor_ = s; }
   void set_defrost_sensor(binary_sensor::BinarySensor *s) { this->defrost_sensor_ = s; }
   void set_compressor_running_sensor(binary_sensor::BinarySensor *s) { this->compressor_running_sensor_ = s; }
-  void set_occupancy_sensor(binary_sensor::BinarySensor *s) { this->occupancy_sensor_ = s; }
+  void set_vacant_sensor(binary_sensor::BinarySensor *s) { this->vacant_sensor_ = s; }
   void set_self_clean_operation_sensor(binary_sensor::BinarySensor *s) { this->self_clean_operation_sensor_ = s; }
 
  protected:
@@ -197,7 +197,7 @@ class MhiCnsComponent : public Component {
   binary_sensor::BinarySensor *healthy_sensor_{nullptr};
   binary_sensor::BinarySensor *defrost_sensor_{nullptr};
   binary_sensor::BinarySensor *compressor_running_sensor_{nullptr};
-  binary_sensor::BinarySensor *occupancy_sensor_{nullptr};
+  binary_sensor::BinarySensor *vacant_sensor_{nullptr};
   binary_sensor::BinarySensor *self_clean_operation_sensor_{nullptr};
 };
 

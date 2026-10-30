@@ -74,7 +74,7 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
   if (size == LONG_FRAME_SIZE) {
     // Extended CNS state: raw 20 carries occupancy, raw 21 carries the
     // left/right position and raw 22 carries LR-auto/3D Auto flags.
-    state.occupancy_detected = (frame[RAW20] & 0x01) != 0;
+    state.vacant = (frame[RAW20] & 0x01) != 0;
     state.horizontal_vanes = (frame[DB17] & 0x03) == 0x01 ? 8 : (frame[DB16] & 0x1F) + 1;
     state.auto_3d = (frame[DB17] & 0x0C) == 0x04;
     state.self_clean_operation = (frame[RAW25] & 0x01) != 0;
