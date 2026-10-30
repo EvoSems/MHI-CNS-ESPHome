@@ -32,6 +32,7 @@ struct AcState {
   uint8_t fan{7};
   float target_temperature{20.0f};
   float room_temperature{NAN};
+  float reported_room_temperature{NAN};
   uint8_t vertical_vanes{0};
   uint8_t horizontal_vanes{0};
   bool auto_3d{false};

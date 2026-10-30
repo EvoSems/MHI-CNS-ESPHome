@@ -12,6 +12,7 @@ static constexpr uint32_t SETTINGS_KEY = 0x4D434E53;
 static constexpr uint32_t SAVE_DELAY_MS = 5000;
 static constexpr uint32_t DIAGNOSTIC_INTERVAL_MS = 30000;
 static constexpr uint32_t OPERATING_DATA_PUBLISH_MS = 5000;
+static constexpr uint32_t ROOM_TEMPERATURE_REPORT_MS = 15000;
 static constexpr uint8_t SETTINGS_VERSION = 2;
 
 struct OperatingDataRequest { uint8_t selector; uint8_t code; };
@@ -127,6 +128,30 @@ void MhiCnsComponent::loop() {
   // measurements learned from earlier replies in the request cycle.
   AcState decoded = this->state_;
   FrameCodec::decode_state(this->rx_.data(), this->frame_size_, decoded);
+
+  // The built-in thermistor has 0.25 C resolution and naturally jitters around
+  // a boundary. Average valid samples for 15 seconds, then report only the
+  // nearest 0.5 C to Home Assistant. Publish the first sample immediately so
+  // the climate entity is available as soon as the AC starts communicating.
+  const float room_sample = !std::isnan(decoded.room_temperature)
+                                ? decoded.room_temperature
+                                : decoded.return_air_temperature;
+  if (!std::isnan(room_sample) && room_sample >= -10.0f && room_sample <= 60.0f) {
+    if (std::isnan(decoded.reported_room_temperature)) {
+      decoded.reported_room_temperature = std::round(room_sample * 2.0f) / 2.0f;
+      this->room_temperature_report_at_ = millis() + ROOM_TEMPERATURE_REPORT_MS;
+    } else {
+      this->room_temperature_sum_ += room_sample;
+      this->room_temperature_samples_++;
+      if (static_cast<int32_t>(millis() - this->room_temperature_report_at_) >= 0) {
+        const float average = this->room_temperature_sum_ / this->room_temperature_samples_;
+        decoded.reported_room_temperature = std::round(average * 2.0f) / 2.0f;
+        this->room_temperature_sum_ = 0.0f;
+        this->room_temperature_samples_ = 0;
+        this->room_temperature_report_at_ = millis() + ROOM_TEMPERATURE_REPORT_MS;
+      }
+    }
+  }
 
   this->valid_frames_++;
   this->last_valid_frame_at_ = millis();
@@ -376,9 +401,7 @@ void MhiCnsComponent::publish_operating_data_() {
 #define PUB(name, value) if (this->name##_sensor_ != nullptr && !std::isnan(value)) this->name##_sensor_->publish_state(value)
   PUB(error_code, this->state_.error_code);
   if (this->indoor_temperature_sensor_) {
-    const float indoor = !std::isnan(this->state_.room_temperature)
-                             ? this->state_.room_temperature
-                             : this->state_.return_air_temperature;
+    const float indoor = this->state_.reported_room_temperature;
     if (!std::isnan(indoor)) this->indoor_temperature_sensor_->publish_state(indoor);
   }
   PUB(outdoor_temperature, this->state_.outdoor_temperature);

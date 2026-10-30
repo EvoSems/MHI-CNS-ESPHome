@@ -102,11 +102,7 @@ void MhiCnsClimate::on_mhi_state(const AcState &state) {
     }
   }
   this->target_temperature = state.target_temperature;
-  // DB3 is the indoor unit's normal room-temperature source. Some models also
-  // expose return-air temperature as operating data, so use it as a fallback.
-  this->current_temperature = !std::isnan(state.room_temperature)
-                                  ? state.room_temperature
-                                  : state.return_air_temperature;
+  this->current_temperature = state.reported_room_temperature;
   switch (state.fan) {
     case 0: this->fan_mode = climate::CLIMATE_FAN_QUIET; break;
     case 1: this->fan_mode = climate::CLIMATE_FAN_LOW; break;

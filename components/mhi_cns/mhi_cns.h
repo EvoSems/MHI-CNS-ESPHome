@@ -135,6 +135,9 @@ class MhiCnsComponent : public Component {
   uint32_t command_failures_{0};
   uint32_t trace_until_{0};
   uint32_t trace_frame_number_{0};
+  float room_temperature_sum_{0.0f};
+  uint16_t room_temperature_samples_{0};
+  uint32_t room_temperature_report_at_{0};
   bool silent_ack_pending_{false};
   bool pending_silent_restore_{false};
   bool silent_ack_value_{false};
