@@ -13,7 +13,7 @@ static constexpr uint32_t SAVE_DELAY_MS = 5000;
 static constexpr uint32_t DIAGNOSTIC_INTERVAL_MS = 30000;
 static constexpr uint32_t OPERATING_DATA_PUBLISH_MS = 5000;
 static constexpr uint32_t ROOM_TEMPERATURE_REPORT_MS = 15000;
-static constexpr uint32_t DISCOVERY_REPLY_TIMEOUT_MS = 500;
+static constexpr uint32_t DISCOVERY_REPLY_TIMEOUT_MS = 1000;
 static constexpr uint32_t DISCOVERY_REQUEST_GAP_MS = 100;
 static constexpr uint8_t SETTINGS_VERSION = 2;
 
@@ -87,16 +87,23 @@ void MhiCnsComponent::loop() {
     this->discovery_timeouts_++;
     this->advance_discovery_scan_();
   }
-  if (this->discovery_active_ && !this->discovery_pending_ && this->retries_remaining_ == 0 &&
-      this->alternate_frame_ && static_cast<int32_t>(millis() - this->discovery_next_request_at_) >= 0) {
+  if (this->discovery_active_ && this->retries_remaining_ == 0 && this->alternate_frame_ &&
+      static_cast<int32_t>(millis() - this->discovery_next_request_at_) >= 0) {
     static constexpr uint8_t SELECTORS[] = {0xC0, 0x40};
     frame_command.request_operating_data = true;
-    frame_command.operating_data_selector = SELECTORS[this->discovery_selector_index_];
-    frame_command.operating_data_code = static_cast<uint8_t>(this->discovery_code_);
-    this->discovery_pending_ = true;
-    this->discovery_pending_selector_ = frame_command.operating_data_selector;
-    this->discovery_pending_code_ = frame_command.operating_data_code;
-    this->discovery_deadline_ = millis() + DISCOVERY_REPLY_TIMEOUT_MS;
+    if (this->discovery_pending_) {
+      // CNS replies are asynchronous on some indoor boards. Keep presenting
+      // the same read request on command frames until its reply or timeout.
+      frame_command.operating_data_selector = this->discovery_pending_selector_;
+      frame_command.operating_data_code = this->discovery_pending_code_;
+    } else {
+      frame_command.operating_data_selector = SELECTORS[this->discovery_selector_index_];
+      frame_command.operating_data_code = static_cast<uint8_t>(this->discovery_code_);
+      this->discovery_pending_ = true;
+      this->discovery_pending_selector_ = frame_command.operating_data_selector;
+      this->discovery_pending_code_ = frame_command.operating_data_code;
+      this->discovery_deadline_ = millis() + DISCOVERY_REPLY_TIMEOUT_MS;
+    }
   } else if (!this->discovery_active_ && this->alternate_frame_ && this->retries_remaining_ == 0 &&
              ++this->operating_data_index_ >= 20) {
     static uint8_t request_index = 0;
@@ -333,12 +340,22 @@ void MhiCnsComponent::advance_discovery_scan_() {
 }
 
 void MhiCnsComponent::handle_discovery_reply_(const uint8_t *frame) {
-  if (!this->discovery_pending_ || frame[12] != this->discovery_pending_code_)
+  if (!this->discovery_pending_)
     return;
   // OP1=FF is the request marker/no-value sentinel. OP1=00 is retained in the
   // log because a valid read may report zero; this scanner never transmits it.
   if (frame[13] == 0xFF && frame[14] == 0xFF && frame[15] == 0xFF)
     return;
+  const uint8_t data_class = frame[13] & 0x30;
+  if (data_class != 0x10 && data_class != 0x20 && frame[12] != 0xDD)
+    return;
+  if (frame[12] != this->discovery_pending_code_) {
+    // A reply to the previous request can arrive after the next request has
+    // started. Preserve it in the output without attributing it to that code.
+    ESP_LOGI("mhi_cns.discovery", "LATE,%02X,%02X,%02X,%02X,%02X",
+             frame[9], frame[12], frame[13], frame[14], frame[15]);
+    return;
+  }
   ESP_LOGI("mhi_cns.discovery", "%02X,%02X,%02X,%02X,%02X,%02X",
            this->discovery_pending_selector_, this->discovery_pending_code_, frame[9],
            frame[13], frame[14], frame[15]);
