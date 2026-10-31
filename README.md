@@ -26,13 +26,30 @@ The component reports MHI operation data; it does not estimate electrical power.
 
 ## ESPHome example
 
+Use one config per physical air conditioner. Give each device its own
+`deviceid` and `devicename`; `mhi_bus_id` is only an internal YAML reference
+and may stay the same in each config. The example below uses the local
+component checkout. For a Home Assistant install, use
+`source: github://EvoSems/MHI-CNS-ESPHome@main` instead.
+
 ```yaml
+substitutions:
+  deviceid: "loungeroomaircon"
+  devicename: "Lounge Room Aircon"
+  mhi_bus_id: "mhi_bus"
+
+esphome:
+  name: ${deviceid}
+  friendly_name: ${devicename}
+
 external_components:
-  - source: github://EvoSems/MHI-CNS-ESPHome@main
+  - source:
+      type: local
+      path: ../components
     components: [mhi_cns]
 
 mhi_cns:
-  id: lounge_mhi
+  id: ${mhi_bus_id}
   frame_size: 33
   sck_pin: 14
   mosi_pin: 13
@@ -40,18 +57,18 @@ mhi_cns:
 
 climate:
   - platform: mhi_cns
-    mhi_cns_id: lounge_mhi
-    name: Lounge Room Air Conditioner
+    mhi_cns_id: ${mhi_bus_id}
+    name: ${devicename}
 
 switch:
   - platform: mhi_cns
-    mhi_cns_id: lounge_mhi
+    mhi_cns_id: ${mhi_bus_id}
     auto_3d:
       name: 3D Auto
 
 select:
   - platform: mhi_cns
-    mhi_cns_id: lounge_mhi
+    mhi_cns_id: ${mhi_bus_id}
     vertical_vanes:
       name: Vertical Vanes
     horizontal_vanes:

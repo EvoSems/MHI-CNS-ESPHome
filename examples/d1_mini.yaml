@@ -1,6 +1,12 @@
+substitutions:
+  # Change these for each physical air conditioner.
+  deviceid: "mhi-cns-test"
+  devicename: "MHI CNS Test"
+  mhi_bus_id: "mhi_bus"
+
 esphome:
-  name: mhi-cns-test
-  friendly_name: MHI CNS Test
+  name: ${deviceid}
+  friendly_name: ${devicename}
 
 esp8266:
   board: d1_mini
@@ -29,7 +35,7 @@ external_components:
     components: [mhi_cns]
 
 mhi_cns:
-  id: mhi_bus
+  id: ${mhi_bus_id}
   frame_size: 33
   command_retries: 3
   sck_pin: 14
@@ -38,18 +44,18 @@ mhi_cns:
 
 climate:
   - platform: mhi_cns
-    mhi_cns_id: mhi_bus
-    name: Air Conditioner
+    mhi_cns_id: ${mhi_bus_id}
+    name: ${devicename}
 
 switch:
   - platform: mhi_cns
-    mhi_cns_id: mhi_bus
+    mhi_cns_id: ${mhi_bus_id}
     auto_3d:
       name: 3D Auto
 
 select:
   - platform: mhi_cns
-    mhi_cns_id: mhi_bus
+    mhi_cns_id: ${mhi_bus_id}
     vertical_vanes:
       name: Vertical Vanes
     horizontal_vanes:
@@ -57,7 +63,7 @@ select:
 
 sensor:
   - platform: mhi_cns
-    mhi_cns_id: mhi_bus
+    mhi_cns_id: ${mhi_bus_id}
     frame_errors:
       name: Frame Errors
     valid_frames:
@@ -75,6 +81,6 @@ sensor:
 
 binary_sensor:
   - platform: mhi_cns
-    mhi_cns_id: mhi_bus
+    mhi_cns_id: ${mhi_bus_id}
     compressor_running:
       name: Compressor Running
