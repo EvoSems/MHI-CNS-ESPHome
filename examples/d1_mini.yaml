@@ -15,6 +15,10 @@ wifi:
 
 api:
 
+button:
+  - platform: restart
+    name: Restart
+
 ota:
   platform: esphome
 
