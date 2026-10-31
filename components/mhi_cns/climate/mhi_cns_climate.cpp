@@ -79,6 +79,12 @@ void MhiCnsClimate::control(const climate::ClimateCall &call) {
         this->parent_->set_mode(HvacMode::FAN);
         this->parent_->set_power(true);
         break;
+      case climate::CLIMATE_MODE_HEAT_COOL:
+        // Home Assistant's climate.toggle turns an OFF climate entity on by
+        // requesting HEAT_COOL. Preserve the last saved MHI mode; set_power()
+        // queues the persisted operating settings before restoring power.
+        this->parent_->set_power(true);
+        break;
       default:
         this->parent_->set_mode(HvacMode::AUTO);
         this->parent_->set_power(true);
