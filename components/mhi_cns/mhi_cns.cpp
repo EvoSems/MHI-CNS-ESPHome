@@ -20,7 +20,7 @@ static constexpr OperatingDataRequest OPERATING_DATA[] = {
     {0xC0, 0x1F},
     {0x40, 0x1F}, {0xC0, 0x1E}, {0x40, 0x1E}, {0x40, 0x11}, {0x40, 0x85},
     {0x40, 0x90}, {0x40, 0xB1}, {0x40, 0x7C}, {0x40, 0x0C}, {0x40, 0x13},
-    {0xC0, 0x94}, {0xC0, 0xDD},
+    {0xC0, 0x94},
 };
 
 enum SettingField : uint8_t {
@@ -30,7 +30,6 @@ enum SettingField : uint8_t {
   FIELD_VERTICAL = 1 << 3,
   FIELD_HORIZONTAL = 1 << 4,
   FIELD_AUTO_3D = 1 << 5,
-  FIELD_SILENT = 1 << 6,
 };
 
 void MhiCnsComponent::setup() {
@@ -142,14 +141,6 @@ void MhiCnsComponent::loop() {
   this->last_valid_frame_at_ = millis();
   this->alternate_frame_ = !this->alternate_frame_;
   this->state_ = decoded;
-  if (this->silent_ack_pending_) {
-    if (decoded.silent_operation == this->silent_ack_value_) {
-      this->silent_ack_pending_ = false;
-    } else if (static_cast<int32_t>(millis() - this->silent_ack_deadline_) >= 0) {
-      this->silent_ack_pending_ = false;
-      this->command_failures_++;
-    }
-  }
   this->update_settings_from_state_(decoded);
   this->notify_state_();
   this->publish_operating_data_();
@@ -163,10 +154,6 @@ void MhiCnsComponent::loop() {
   }
   if (this->retries_remaining_ == 0) {
     this->command_ = {};
-    if (this->pending_silent_restore_) {
-      this->pending_silent_restore_ = false;
-      this->set_silent_operation(this->settings_.silent_operation != 0);
-    }
   }
 }
 
@@ -243,18 +230,6 @@ void MhiCnsComponent::set_auto_3d(bool value) {
   this->retries_remaining_ = this->command_retries_;
 }
 
-void MhiCnsComponent::set_silent_operation(bool value) {
-  this->command_.set_silent = true;
-  this->command_.silent = value;
-  this->settings_.silent_operation = value;
-  this->settings_.valid |= FIELD_SILENT;
-  this->mark_settings_dirty_();
-  this->retries_remaining_ = this->command_retries_;
-  this->silent_ack_pending_ = true;
-  this->silent_ack_value_ = value;
-  this->silent_ack_deadline_ = millis() + 45000;
-}
-
 void MhiCnsComponent::queue_persisted_settings_() {
   const auto valid = this->settings_.valid;
   if (valid & FIELD_MODE) {
@@ -280,11 +255,6 @@ void MhiCnsComponent::queue_persisted_settings_() {
   if (this->frame_size_ == LONG_FRAME_SIZE && (valid & FIELD_AUTO_3D)) {
     this->command_.set_auto_3d = true;
     this->command_.auto_3d = this->settings_.auto_3d;
-  }
-  if (valid & FIELD_SILENT) {
-    // Silent operation uses a dedicated CNS request frame. Send it only after
-    // the normal power/mode/fan/temperature/vane restoration is acknowledged.
-    this->pending_silent_restore_ = true;
   }
 }
 
@@ -357,7 +327,6 @@ void MhiCnsComponent::update_settings_from_state_(const AcState &state) {
     update(FIELD_HORIZONTAL, this->settings_.horizontal_vanes, state.horizontal_vanes);
     update(FIELD_AUTO_3D, this->settings_.auto_3d, state.auto_3d ? 1 : 0);
   }
-  update(FIELD_SILENT, this->settings_.silent_operation, state.silent_operation ? 1 : 0);
   if (changed)
     this->mark_settings_dirty_();
 }

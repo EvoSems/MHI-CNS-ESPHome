@@ -31,8 +31,6 @@ switch:
       name: Test Power
     auto_3d:
       name: Test 3D Auto
-    silent_operation:
-      name: Silent Operation
 
 select:
   - platform: mhi_cns

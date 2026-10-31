@@ -37,7 +37,6 @@ class MhiCnsComponent : public Component {
   void set_vertical_vanes(uint8_t value);
   void set_horizontal_vanes(uint8_t value);
   void set_auto_3d(bool value);
-  void set_silent_operation(bool value);
   void set_external_temperature_sensor(sensor::Sensor *sensor) { this->external_temperature_sensor_ = sensor; }
   void set_external_temperature_timeout(uint32_t value) { this->external_temperature_timeout_ms_ = value; }
 
@@ -84,7 +83,7 @@ class MhiCnsComponent : public Component {
     uint8_t horizontal_vanes{0};
     uint8_t auto_3d{0};
     uint8_t target_temperature_half_degrees{40};
-    uint8_t silent_operation{0};
+    uint8_t legacy_silent_operation{0};  // Retained for stored-settings layout compatibility.
   };
 
   struct LegacyPersistedSettingsV1 {
@@ -135,10 +134,6 @@ class MhiCnsComponent : public Component {
   float room_temperature_sum_{0.0f};
   uint16_t room_temperature_samples_{0};
   uint32_t room_temperature_report_at_{0};
-  bool silent_ack_pending_{false};
-  bool pending_silent_restore_{false};
-  bool silent_ack_value_{false};
-  uint32_t silent_ack_deadline_{0};
   sensor::Sensor *external_temperature_sensor_{nullptr};
   float external_temperature_{NAN};
   uint32_t external_temperature_at_{0};

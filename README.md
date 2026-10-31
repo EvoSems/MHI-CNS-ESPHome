@@ -23,7 +23,8 @@ testing is still required before replacing an existing installation.
 ## Features
 
 - Safe-boot climate and dedicated power control
-- Persistent mode, target, fan, vanes, 3D Auto and Silent Operation
+- Persistent mode, target, fan, vanes and 3D Auto
+- Quiet fan mode through the climate fan-mode control
 - Vertical and horizontal vane selectors
 - External room-temperature injection with stale-data fallback
 - Four-way climate swing plus direct vertical and horizontal vane positions

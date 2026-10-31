@@ -37,7 +37,6 @@ struct AcState {
   uint8_t horizontal_vanes{0};
   bool auto_3d{false};
   uint8_t error_code{0};
-  bool silent_operation{false};
   bool defrost{false};
   bool compressor_running{false};
   float outdoor_temperature{NAN};
@@ -74,8 +73,6 @@ struct CommandSnapshot {
   uint8_t horizontal_vanes{0};
   bool set_auto_3d{false};
   bool auto_3d{false};
-  bool set_silent{false};
-  bool silent{false};
   bool set_room_temperature{false};
   float room_temperature{NAN};
   bool request_operating_data{false};

@@ -7,15 +7,11 @@ from .. import CONF_MHI_CNS_ID, MhiCnsComponent, mhi_cns_ns
 
 CONF_POWER = "power"
 CONF_AUTO_3D = "auto_3d"
-CONF_SILENT_OPERATION = "silent_operation"
 MhiCnsPowerSwitch = mhi_cns_ns.class_(
     "MhiCnsPowerSwitch", switch.Switch, cg.Component, cg.Parented.template(MhiCnsComponent)
 )
 MhiCnsAuto3dSwitch = mhi_cns_ns.class_(
     "MhiCnsAuto3dSwitch", switch.Switch, cg.Component, cg.Parented.template(MhiCnsComponent)
-)
-MhiCnsSilentSwitch = mhi_cns_ns.class_(
-    "MhiCnsSilentSwitch", switch.Switch, cg.Component, cg.Parented.template(MhiCnsComponent)
 )
 
 CONFIG_SCHEMA = cv.Schema(
@@ -26,9 +22,6 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_AUTO_3D): switch.switch_schema(
             MhiCnsAuto3dSwitch, device_class=DEVICE_CLASS_SWITCH, icon="mdi:video-3d"
-        ),
-        cv.Optional(CONF_SILENT_OPERATION): switch.switch_schema(
-            MhiCnsSilentSwitch, device_class=DEVICE_CLASS_SWITCH, icon="mdi:fan-chevron-down"
         ),
     }
 )
@@ -42,8 +35,4 @@ async def to_code(config):
     if auto_3d := config.get(CONF_AUTO_3D):
         var = await switch.new_switch(auto_3d)
         await cg.register_component(var, auto_3d)
-        await cg.register_parented(var, parent)
-    if silent := config.get(CONF_SILENT_OPERATION):
-        var = await switch.new_switch(silent)
-        await cg.register_component(var, silent)
         await cg.register_parented(var, parent)

@@ -70,16 +70,17 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
   state.vertical_vanes = (vertical & 0x40) ? 5 : (vertical & 0x03) + 1;
 
   if (size == LONG_FRAME_SIZE) {
-    // Extended CNS state: raw 20 carries occupancy, raw 21 carries the
-    // left/right position and raw 22 carries LR-auto/3D Auto flags.
-    state.horizontal_vanes = (frame[DB17] & 0x03) == 0x01 ? 8 : (frame[DB16] & 0x1F) + 1;
+    // Match the original MHI mapping: DB17 bit 0 marks horizontal swing;
+    // otherwise DB16 bits 0-2 encode the selected left/right position.
+    const uint8_t horizontal = (frame[DB16] & 0x07) | ((frame[DB17] & 0x01) << 4);
+    state.horizontal_vanes = (horizontal & 0x10) ? 8 : (horizontal & 0x07) + 1;
     state.auto_3d = (frame[DB17] & 0x0C) == 0x04;
   }
 
   const bool indoor = (frame[9] & 0x80) != 0;
   const uint8_t data_class = frame[DB10] & 0x30;
   const bool operation_data = data_class == 0x10 || data_class == 0x20;
-  if (operation_data || frame[DB9] == 0xDD) {
+  if (operation_data) {
     switch (frame[DB9]) {
       case 0x94:
         if (indoor) state.energy_this_run = ((frame[DB12] << 8) | frame[DB11]) * 0.25f;
@@ -135,9 +136,6 @@ bool FrameCodec::decode_state(const uint8_t *frame, size_t size, AcState &state)
       case 0x13:
         if (!indoor) state.expansion_valve = (frame[DB12] << 8) | frame[DB11];
         break;
-      case 0xDD:
-        if (frame[DB10] == 0x80) state.silent_operation = (frame[DB11] & 0x20) != 0;
-        break;
       default:
         break;
     }
@@ -191,11 +189,7 @@ void FrameCodec::build_response(std::array<uint8_t, LONG_FRAME_SIZE> &frame, siz
     }
     if (size == LONG_FRAME_SIZE && command.set_auto_3d)
       frame[DB17] |= 0x0A | (command.auto_3d ? 0x04 : 0x00);
-    if (command.set_silent) {
-      frame[9] = 0x00;
-      frame[DB9] = 0x21;
-      frame[DB10] = command.silent ? 0x01 : 0x00;
-    } else if (command.request_operating_data) {
+    if (command.request_operating_data) {
       frame[9] = command.operating_data_selector;
       frame[DB9] = command.operating_data_code;
     }
