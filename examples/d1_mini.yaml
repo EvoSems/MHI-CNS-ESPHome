@@ -40,8 +40,6 @@ climate:
 switch:
   - platform: mhi_cns
     mhi_cns_id: mhi_bus
-    power:
-      name: MHI Power
     auto_3d:
       name: 3D Auto
 

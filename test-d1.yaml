@@ -27,8 +27,6 @@ climate:
 switch:
   - platform: mhi_cns
     mhi_cns_id: mhi_bus
-    power:
-      name: Test Power
     auto_3d:
       name: Test 3D Auto
 
