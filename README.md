@@ -1,40 +1,30 @@
 # MHI-CNS-ESPHome
 
-A clean ESPHome component for Mitsubishi Heavy Industries air conditioners
-connected through the CNS SPI port. The first hardware target is the ESP8266
-D1 Mini using the established SCK=D5, MOSI=D7 and MISO=D6 wiring.
+ESPHome component for Mitsubishi Heavy Industries air conditioners over the CNS
+SPI interface. The current hardware target is the ESP8266 D1 Mini using SCK=D5,
+MOSI=D7 and MISO=D6.
 
-## Design goals
+## Current build features
 
-- Never power the air conditioner on during boot.
-- Keep protocol parsing independent from GPIO timing and ESPHome entities.
-- Validate every frame before changing state.
-- Coalesce commands and retry complete command snapshots.
-- Restore operating settings only when an explicit power-on is requested.
-- Expose communication health without adding bus traffic.
-- Keep protocol code host-testable.
+- Native climate control for off, auto, cool, heat, dry and fan-only modes
+- Target temperature and fan modes: Quiet, Low, Medium, High and Auto
+- Native climate swing modes: Off, Vertical, Horizontal and Both
+- Separate vertical and horizontal vane position selectors using MHI's option
+  names
+- 3D Auto control
+- Current room temperature, smoothed over 15 seconds and rounded to 0.5 °C
+- MHI operation sensors: error code, indoor/outdoor/return-air temperatures,
+  current, compressor frequency, run energy, coil temperatures, discharge
+  temperature and superheat, expansion valve, indoor/outdoor fan speeds,
+  protection code and run hours
+- Communication diagnostics, defrost status and compressor-running status
+- Saved operating settings applied only after an explicit climate power-on
+- Safe boot: the controller does not turn the air conditioner on after restart
+- Optional external room-temperature input with stale-value timeout
 
-## Status
+The component reports MHI operation data; it does not estimate electrical power.
 
-This is a new implementation. Frame validation and codec tests run on the host.
-ESP8266 firmware compilation is required for every change. Physical hardware
-testing is still required before replacing an existing installation.
-
-## Features
-
-- Safe-boot climate and dedicated power control
-- Persistent mode, target, fan, vanes and 3D Auto
-- Quiet fan mode through the climate fan-mode control
-- Vertical and horizontal vane selectors
-- External room-temperature injection with stale-data fallback
-- Four-way climate swing plus direct vertical and horizontal vane positions
-- Command acknowledgement and failure diagnostics
-- Original MHI operating-data channels without calculated power estimates
-- Extended 33-byte state decoding for LR vanes and 3D Auto
-- Versioned persistent settings with migration
-- Host protocol tests and automatic D1 Mini firmware compilation
-
-## Example
+## ESPHome example
 
 ```yaml
 external_components:
@@ -51,17 +41,25 @@ mhi_cns:
 climate:
   - platform: mhi_cns
     mhi_cns_id: lounge_mhi
-    name: Lounge Room Aircon
+    name: Lounge Room Air Conditioner
 
 switch:
   - platform: mhi_cns
     mhi_cns_id: lounge_mhi
-    power:
-      name: MHI Power
+    auto_3d:
+      name: 3D Auto
+
+select:
+  - platform: mhi_cns
+    mhi_cns_id: lounge_mhi
+    vertical_vanes:
+      name: Vertical Vanes
+    horizontal_vanes:
+      name: Horizontal Vanes
 ```
 
-## Protocol references
+## Protocol basis
 
-The implementation is based on public CNS frame documentation and independently
-verified protocol findings from MHI-AC-Ctrl, MHI2MQTT and the WF-RAC research.
-No source code is copied from those projects.
+The implementation follows public CNS documentation and protocol findings from
+MHI-AC-Ctrl, MHI2MQTT and WF-RAC research. No source code is copied from those
+projects.
