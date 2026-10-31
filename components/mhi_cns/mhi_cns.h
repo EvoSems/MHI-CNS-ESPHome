@@ -38,8 +38,6 @@ class MhiCnsComponent : public Component {
   void set_horizontal_vanes(uint8_t value);
   void set_auto_3d(bool value);
   void set_silent_operation(bool value);
-  void start_trace_capture(uint32_t duration_ms);
-  void start_discovery_scan();
   void set_external_temperature_sensor(sensor::Sensor *sensor) { this->external_temperature_sensor_ = sensor; }
   void set_external_temperature_timeout(uint32_t value) { this->external_temperature_timeout_ms_ = value; }
 
@@ -75,8 +73,6 @@ class MhiCnsComponent : public Component {
   void set_healthy_sensor(binary_sensor::BinarySensor *s) { this->healthy_sensor_ = s; }
   void set_defrost_sensor(binary_sensor::BinarySensor *s) { this->defrost_sensor_ = s; }
   void set_compressor_running_sensor(binary_sensor::BinarySensor *s) { this->compressor_running_sensor_ = s; }
-  void set_vacant_sensor(binary_sensor::BinarySensor *s) { this->vacant_sensor_ = s; }
-  void set_self_clean_operation_sensor(binary_sensor::BinarySensor *s) { this->self_clean_operation_sensor_ = s; }
 
  protected:
   struct PersistedSettings {
@@ -109,9 +105,6 @@ class MhiCnsComponent : public Component {
   void notify_state_();
   void update_settings_from_state_(const AcState &state);
   void publish_operating_data_();
-  void advance_discovery_scan_();
-  void handle_discovery_reply_(const uint8_t *frame);
-  void log_extended_state_if_changed_(const uint8_t *frame);
   bool command_acknowledged_(const AcState &state) const;
 
   uint8_t frame_size_{SHORT_FRAME_SIZE};
@@ -139,20 +132,6 @@ class MhiCnsComponent : public Component {
   uint32_t operating_data_at_{0};
   uint8_t operating_data_index_{0};
   uint32_t command_failures_{0};
-  uint32_t trace_until_{0};
-  uint32_t trace_frame_number_{0};
-  bool discovery_active_{false};
-  bool discovery_pending_{false};
-  uint8_t discovery_selector_index_{0};
-  uint16_t discovery_code_{0};
-  uint8_t discovery_pending_selector_{0};
-  uint8_t discovery_pending_code_{0};
-  uint16_t discovery_found_{0};
-  uint16_t discovery_timeouts_{0};
-  uint32_t discovery_deadline_{0};
-  uint32_t discovery_next_request_at_{0};
-  std::array<uint8_t, 8> discovery_extended_state_{};
-  bool discovery_extended_state_valid_{false};
   float room_temperature_sum_{0.0f};
   uint16_t room_temperature_samples_{0};
   uint32_t room_temperature_report_at_{0};
@@ -197,8 +176,6 @@ class MhiCnsComponent : public Component {
   binary_sensor::BinarySensor *healthy_sensor_{nullptr};
   binary_sensor::BinarySensor *defrost_sensor_{nullptr};
   binary_sensor::BinarySensor *compressor_running_sensor_{nullptr};
-  binary_sensor::BinarySensor *vacant_sensor_{nullptr};
-  binary_sensor::BinarySensor *self_clean_operation_sensor_{nullptr};
 };
 
 }  // namespace esphome::mhi_cns

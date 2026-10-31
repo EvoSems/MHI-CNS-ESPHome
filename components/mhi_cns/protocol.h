@@ -40,8 +40,6 @@ struct AcState {
   bool silent_operation{false};
   bool defrost{false};
   bool compressor_running{false};
-  bool vacant{false};
-  bool self_clean_operation{false};
   float outdoor_temperature{NAN};
   float return_air_temperature{NAN};
   float current_amps{NAN};

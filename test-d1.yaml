@@ -34,15 +34,6 @@ switch:
     silent_operation:
       name: Silent Operation
 
-button:
-  - platform: mhi_cns
-    mhi_cns_id: mhi_bus
-    trace_capture:
-      name: Capture MHI Trace
-      duration: 15s
-    discovery_scan:
-      name: Discover CNS Data
-
 select:
   - platform: mhi_cns
     mhi_cns_id: mhi_bus
@@ -96,5 +87,3 @@ binary_sensor:
     healthy: {name: Communication Healthy}
     defrost: {name: Defrost}
     compressor_running: {name: Compressor Running}
-    vacant: {name: Vacant}
-    self_clean_operation: {name: Self Clean Reported}
