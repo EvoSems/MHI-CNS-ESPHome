@@ -1,8 +1,10 @@
 # MHI-CNS-ESPHome
 
 ESPHome component for Mitsubishi Heavy Industries air conditioners using the
-CNS interface. The supported hardware configuration is an ESP8266 D1 Mini with
-SCK on D5/GPIO14, MOSI on D7/GPIO13 and MISO on D6/GPIO12.
+CNS interface. The D1 Mini hardware build and CNS wiring are based on the
+configuration documented by [ginkage/MHI-AC-Ctrl-ESPHome](https://github.com/ginkage/MHI-AC-Ctrl-ESPHome).
+This project keeps the ESP8266 D1 Mini with SCK on D5/GPIO14, MOSI on
+D7/GPIO13 and MISO on D6/GPIO12.
 
 ## Features
 
