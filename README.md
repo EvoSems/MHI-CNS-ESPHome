@@ -23,6 +23,9 @@ MOSI=D7 and MISO=D6.
 - Optional external room-temperature input with stale-value timeout
 
 The component reports MHI operation data; it does not estimate electrical power.
+The D1 Mini example includes the decoded operating sensors and communication
+diagnostics. Set `show_sensors: false` under `mhi_cns:` to hide those sensor
+entities from Home Assistant while keeping climate control available.
 
 ## ESPHome example
 

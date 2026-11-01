@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor
+from esphome.core import CORE
 from esphome.const import DEVICE_CLASS_CONNECTIVITY, DEVICE_CLASS_RUNNING, ENTITY_CATEGORY_DIAGNOSTIC
 from .. import CONF_MHI_CNS_ID, MhiCnsComponent
 
@@ -13,7 +14,9 @@ CONFIG_SCHEMA = cv.Schema({
 
 async def to_code(config):
     parent = await cg.get_variable(config[CONF_MHI_CNS_ID])
+    show_sensors = CORE.config.get("mhi_cns", {}).get("show_sensors", True)
     for key, setter in (("healthy", parent.set_healthy_sensor), ("defrost", parent.set_defrost_sensor), ("compressor_running", parent.set_compressor_running_sensor)):
         if key in config:
-            value = await binary_sensor.new_binary_sensor(config[key])
+            entity_config = config[key] if show_sensors else {**config[key], "internal": True}
+            value = await binary_sensor.new_binary_sensor(entity_config)
             cg.add(setter(value))

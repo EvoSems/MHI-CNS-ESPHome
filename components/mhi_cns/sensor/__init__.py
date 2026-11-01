@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import sensor
+from esphome.core import CORE
 from esphome.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_CLASS_MEASUREMENT,
@@ -109,6 +110,7 @@ CONFIG_SCHEMA = cv.Schema(
 
 async def to_code(config):
     parent = await cg.get_variable(config[CONF_MHI_CNS_ID])
+    show_sensors = CORE.config.get("mhi_cns", {}).get("show_sensors", True)
     for key, setter in (
         (CONF_FRAME_ERRORS, parent.set_frame_errors_sensor),
         (CONF_VALID_FRAMES, parent.set_valid_frames_sensor),
@@ -120,9 +122,11 @@ async def to_code(config):
         (CONF_COMMAND_FAILURES, parent.set_command_failures_sensor),
     ):
         if key in config:
-            value = await sensor.new_sensor(config[key])
+            entity_config = config[key] if show_sensors else {**config[key], "internal": True}
+            value = await sensor.new_sensor(entity_config)
             cg.add(setter(value))
     for key in DATA_SENSORS:
         if key in config:
-            value = await sensor.new_sensor(config[key])
+            entity_config = config[key] if show_sensors else {**config[key], "internal": True}
+            value = await sensor.new_sensor(entity_config)
             cg.add(getattr(parent, f"set_{key}_sensor")(value))

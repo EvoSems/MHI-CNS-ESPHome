@@ -14,6 +14,7 @@ CONF_MOSI_PIN = "mosi_pin"
 CONF_MISO_PIN = "miso_pin"
 CONF_EXTERNAL_TEMPERATURE_SENSOR = "external_temperature_sensor"
 CONF_EXTERNAL_TEMPERATURE_TIMEOUT = "external_temperature_timeout"
+CONF_SHOW_SENSORS = "show_sensors"
 
 mhi_cns_ns = cg.esphome_ns.namespace("mhi_cns")
 MhiCnsComponent = mhi_cns_ns.class_("MhiCnsComponent", cg.Component)
@@ -28,6 +29,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_MISO_PIN, default=12): cv.int_range(min=0, max=16),
         cv.Optional(CONF_EXTERNAL_TEMPERATURE_SENSOR): cv.use_id(sensor.Sensor),
         cv.Optional(CONF_EXTERNAL_TEMPERATURE_TIMEOUT, default="5min"): cv.positive_time_period_milliseconds,
+        cv.Optional(CONF_SHOW_SENSORS, default=True): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
